@@ -105,22 +105,23 @@ export function getStreamContext() {
 }
 
 export async function POST(req: Request) {
-  const requestStartTime = Date.now();
-  const {
-    messages,
-    model,
-    group,
-    timezone,
-    id,
-    selectedVisibilityType,
-    isCustomInstructionsEnabled,
-    searchProvider,
-    selectedConnectors,
-  } = await req.json();
-  const { latitude, longitude } = geolocation(req);
-  const streamId = 'stream-' + uuidv7();
+  try {
+    const requestStartTime = Date.now();
+    const {
+      messages,
+      model,
+      group,
+      timezone,
+      id,
+      selectedVisibilityType,
+      isCustomInstructionsEnabled,
+      searchProvider,
+      selectedConnectors,
+    } = await req.json();
+    const { latitude, longitude } = geolocation(req);
+    const streamId = 'stream-' + uuidv7();
 
-  console.log('🔍 Search API:', { model: model.trim(), group, latitude, longitude });
+    console.log('🔍 Search API:', { model: model.trim(), group, latitude, longitude });
 
   // CRITICAL PATH: Get auth status first (required for all subsequent checks)
   const lightweightUser = await getLightweightUser();
@@ -667,4 +668,19 @@ export async function POST(req: Request) {
   //   );
   // }
   return new Response(stream.pipeThrough(new JsonToSseTransformStream()));
+  } catch (error: any) {
+    console.error('API POST Error:', error);
+    // Return proper error response
+    if (error instanceof ChatSDKError) {
+      return error.toResponse();
+    }
+    return Response.json(
+      { 
+        code: 'bad_request:api',
+        message: 'An error occurred while processing your request',
+        cause: error?.message || 'Unknown error'
+      },
+      { status: 500 }
+    );
+  }
 }
