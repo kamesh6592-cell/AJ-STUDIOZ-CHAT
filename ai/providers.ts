@@ -34,35 +34,35 @@ const anannas = process.env.ANANNAS_API_KEY ? createOpenAI({
 
 export const scira = customProvider({
   languageModels: {
-    // Default model - Use Anthropic Claude (you confirmed it works!)
-    'scira-default': process.env.ANTHROPIC_API_KEY 
-      ? anthropic('claude-3-5-haiku-20241022')
-      : process.env.GOOGLE_GENERATIVE_AI_API_KEY
-      ? google('gemini-2.0-flash-exp')
-      : process.env.XAI_API_KEY
-      ? xai('grok-4-fast-non-reasoning')
-      : anthropic('claude-3-5-haiku-20241022'), // Final fallback
+    // Default model - Use XAI Grok (you confirmed it works!)
+    'scira-default': process.env.XAI_API_KEY 
+      ? xai('grok-4-latest')
+      : process.env.ANTHROPIC_API_KEY
+      ? anthropic('claude-sonnet-4-20250514')
+      : process.env.GROQ_API_KEY
+      ? groq('llama-3.3-70b-versatile')
+      : xai('grok-4-latest'), // Final fallback
     
-    'scira-nano': process.env.ANTHROPIC_API_KEY
-      ? anthropic('claude-3-5-haiku-20241022')
-      : google('gemini-2.0-flash-exp'),
+    'scira-nano': process.env.GROQ_API_KEY
+      ? groq('llama-3.3-70b-versatile')
+      : xai('grok-4-latest'),
     
-    'scira-name': process.env.ANTHROPIC_API_KEY
-      ? anthropic('claude-3-5-haiku-20241022')
-      : google('gemini-2.0-flash-exp'),
+    'scira-name': process.env.GROQ_API_KEY
+      ? groq('llama-3.3-70b-versatile')
+      : xai('grok-4-latest'),
     
-    'scira-grok-3-mini': process.env.XAI_API_KEY ? xai('grok-3-mini') : groq('llama-3.3-70b-versatile'),
-    'scira-grok-3': process.env.XAI_API_KEY ? xai('grok-3') : openai('gpt-4o'),
-    'scira-grok-4': process.env.XAI_API_KEY ? xai('grok-4') : openai('gpt-4o'),
-    'scira-grok-4-fast': process.env.XAI_API_KEY ? xai('grok-4-fast-non-reasoning') : openai('gpt-4o-mini'),
-    'scira-grok-4-fast-think': process.env.XAI_API_KEY ? xai('grok-4-fast') : openai('o1'),
-    'scira-code': process.env.XAI_API_KEY ? xai('grok-code-fast-1') : anthropic('claude-3-5-sonnet-20241022'),
-    'scira-enhance': process.env.GOOGLE_GENERATIVE_AI_API_KEY ? google('gemini-2.0-flash-thinking-exp') : anthropic('claude-3-5-sonnet-20241022'),
-    'scira-follow-up': process.env.ANTHROPIC_API_KEY
-      ? anthropic('claude-3-5-haiku-20241022')
-      : process.env.GOOGLE_GENERATIVE_AI_API_KEY
-      ? google('gemini-2.0-flash-exp')
-      : anthropic('claude-3-5-haiku-20241022'),
+    'scira-grok-3-mini': process.env.XAI_API_KEY ? xai('grok-3-mini') : xai('grok-4-latest'),
+    'scira-grok-3': process.env.XAI_API_KEY ? xai('grok-3') : xai('grok-4-latest'),
+    'scira-grok-4': process.env.XAI_API_KEY ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
+    'scira-grok-4-fast': process.env.XAI_API_KEY ? xai('grok-4-latest') : groq('llama-3.3-70b-versatile'),
+    'scira-grok-4-fast-think': process.env.XAI_API_KEY ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
+    'scira-code': process.env.XAI_API_KEY ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
+    'scira-enhance': process.env.GOOGLE_GENERATIVE_AI_API_KEY ? google('gemini-2.0-flash-thinking-exp') : xai('grok-4-latest'),
+    'scira-follow-up': process.env.XAI_API_KEY
+      ? xai('grok-4-latest')
+      : process.env.GROQ_API_KEY
+      ? groq('llama-3.3-70b-versatile')
+      : xai('grok-4-latest'),
     'scira-qwen-4b': huggingface.chat('Qwen/Qwen3-4B-Instruct-2507:nscale'),
     'scira-qwen-4b-thinking': wrapLanguageModel({
       model: huggingface.chat('Qwen/Qwen3-4B-Thinking-2507:nscale'),
