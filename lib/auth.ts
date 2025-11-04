@@ -48,10 +48,10 @@ const polarClient = new Polar({
   ...(process.env.NODE_ENV === 'production' ? {} : { server: 'sandbox' }),
 });
 
-export const dodoPayments = new DodoPayments({
+export const dodoPayments = process.env.DODO_PAYMENTS_API_KEY ? new DodoPayments({
   bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
   ...(process.env.NODE_ENV === 'production' ? { environment: 'live_mode' } : { environment: 'test_mode' }),
-});
+}) : null;
 
 export const auth = betterAuth({
   rateLimit: {
@@ -81,29 +81,45 @@ export const auth = betterAuth({
     },
   }),
   socialProviders: {
-    github: {
-      clientId: serverEnv.GITHUB_CLIENT_ID,
-      clientSecret: serverEnv.GITHUB_CLIENT_SECRET,
-    },
-    google: {
-      clientId: serverEnv.GOOGLE_CLIENT_ID,
-      clientSecret: serverEnv.GOOGLE_CLIENT_SECRET,
-    },
-    twitter: {
-      clientId: serverEnv.TWITTER_CLIENT_ID,
-      clientSecret: serverEnv.TWITTER_CLIENT_SECRET,
-    },
-    microsoft: {
-      clientId: process.env.MICROSOFT_CLIENT_ID as string,
-      clientSecret: process.env.MICROSOFT_CLIENT_SECRET as string,
-      prompt: 'select_account', // Forces account selection
-    },
+    ...(serverEnv.GITHUB_CLIENT_ID && serverEnv.GITHUB_CLIENT_SECRET
+      ? {
+          github: {
+            clientId: serverEnv.GITHUB_CLIENT_ID,
+            clientSecret: serverEnv.GITHUB_CLIENT_SECRET,
+          },
+        }
+      : {}),
+    ...(serverEnv.GOOGLE_CLIENT_ID && serverEnv.GOOGLE_CLIENT_SECRET
+      ? {
+          google: {
+            clientId: serverEnv.GOOGLE_CLIENT_ID,
+            clientSecret: serverEnv.GOOGLE_CLIENT_SECRET,
+          },
+        }
+      : {}),
+    ...(serverEnv.TWITTER_CLIENT_ID && serverEnv.TWITTER_CLIENT_SECRET
+      ? {
+          twitter: {
+            clientId: serverEnv.TWITTER_CLIENT_ID,
+            clientSecret: serverEnv.TWITTER_CLIENT_SECRET,
+          },
+        }
+      : {}),
+    ...(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET
+      ? {
+          microsoft: {
+            clientId: process.env.MICROSOFT_CLIENT_ID,
+            clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+            prompt: 'select_account', // Forces account selection
+          },
+        }
+      : {}),
   },
   pluginRoutes: {
     autoNamespace: true,
   },
   plugins: [
-    dodopayments({
+    ...(dodoPayments ? [dodopayments({
       client: dodoPayments,
       createCustomerOnSignUp: true,
       use: [
@@ -243,7 +259,7 @@ export const auth = betterAuth({
           },
         }),
       ],
-    }),
+    })] : []),
     polar({
       client: polarClient,
       createCustomerOnSignUp: true,
