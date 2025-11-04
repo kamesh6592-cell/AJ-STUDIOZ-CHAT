@@ -289,12 +289,12 @@ const WeatherChart: React.FC<WeatherChartProps> = React.memo(({ result }) => {
       {} as { [key: string]: WeatherDataPoint[] },
     );
 
-    // Get min and max temperatures for chart scaling
-    const minTemp = Math.min(...weatherData.map((d: WeatherDataPoint) => d.minTemp));
-    const maxTemp = Math.max(...weatherData.map((d: WeatherDataPoint) => d.maxTemp));
+    // Get min and max temperatures for chart scaling - with safety checks
+    const minTemp = weatherData.length > 0 ? Math.min(...weatherData.map((d: WeatherDataPoint) => d.minTemp)) : 0;
+    const maxTemp = weatherData.length > 0 ? Math.max(...weatherData.map((d: WeatherDataPoint) => d.maxTemp)) : 30;
 
     // Get current weather (first item in the list)
-    const currentWeather = weatherData[0];
+    const currentWeather = weatherData[0] || null;
 
     // Get sorted days
     const days = Object.keys(hourlyDataByDay).sort((a, b) => new Date(a).getTime() - new Date(b).getTime());
@@ -471,7 +471,7 @@ const WeatherChart: React.FC<WeatherChartProps> = React.memo(({ result }) => {
             </div>
             <ChartContainer config={chartConfig} className="aspect-auto! h-[180px] sm:h-[200px]">
               <ResponsiveContainer width="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+                <LineChart data={chartData.length > 0 ? chartData : []} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.2)" />
                   <XAxis
                     dataKey="date"
