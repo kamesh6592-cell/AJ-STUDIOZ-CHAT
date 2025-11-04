@@ -1883,8 +1883,8 @@ export async function getDodoExpirationDate() {
   return userData?.dodoPayments?.expiresAt || null;
 }
 
-// Initialize QStash client
-const qstash = new Client({ token: serverEnv.QSTASH_TOKEN });
+// Initialize QStash client conditionally (only if token is provided)
+const qstash = serverEnv.QSTASH_TOKEN ? new Client({ token: serverEnv.QSTASH_TOKEN }) : null;
 
 // Helper function to convert frequency to cron schedule with timezone
 function frequencyToCron(frequency: string, time: string, timezone: string, dayOfWeek?: string): string {
@@ -2054,6 +2054,12 @@ export async function createScheduledLookout({
     // Create QStash schedule for all frequencies (recurring and once)
     if (lookout.id) {
       try {
+        if (!qstash) {
+          console.warn('⚠️ QStash not configured - lookout will be created but not scheduled');
+          // Return success without scheduling
+          return lookout;
+        }
+
         if (frequency === 'once') {
           console.log('⏰ Creating QStash one-time execution for lookout:', lookout.id);
           console.log('📅 Scheduled time:', nextRunAt.toISOString());
@@ -2191,7 +2197,7 @@ export async function updateLookoutStatusAction({
     }
 
     // Update QStash schedule status if it exists
-    if (lookout.qstashScheduleId) {
+    if (lookout.qstashScheduleId && qstash) {
       try {
         if (status === 'paused') {
           await qstash.schedules.pause({ schedule: lookout.qstashScheduleId });
@@ -2287,7 +2293,7 @@ export async function updateLookoutAction({
     }
 
     // Update QStash schedule if it exists and frequency/time changed
-    if (lookout.qstashScheduleId && frequency !== 'once') {
+    if (lookout.qstashScheduleId && frequency !== 'once' && qstash) {
       try {
         // Delete old schedule
         await qstash.schedules.delete(lookout.qstashScheduleId);
@@ -2365,7 +2371,7 @@ export async function deleteLookoutAction({ id }: { id: string }) {
     }
 
     // Delete QStash schedule if it exists
-    if (lookout.qstashScheduleId) {
+    if (lookout.qstashScheduleId && qstash) {
       try {
         await qstash.schedules.delete(lookout.qstashScheduleId);
       } catch (error) {
