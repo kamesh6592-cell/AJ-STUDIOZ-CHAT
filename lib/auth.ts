@@ -298,32 +298,20 @@ export const auth = betterAuth({
         }
       },
       use: [
-        checkout({
+        ...(process.env.NEXT_PUBLIC_STARTER_TIER && process.env.NEXT_PUBLIC_STARTER_SLUG ? [checkout({
           products: [
             {
-              productId:
-                process.env.NEXT_PUBLIC_STARTER_TIER ||
-                (() => {
-                  throw new Error('NEXT_PUBLIC_STARTER_TIER environment variable is required');
-                })(),
-              slug:
-                process.env.NEXT_PUBLIC_STARTER_SLUG ||
-                (() => {
-                  throw new Error('NEXT_PUBLIC_STARTER_SLUG environment variable is required');
-                })(),
+              productId: process.env.NEXT_PUBLIC_STARTER_TIER,
+              slug: process.env.NEXT_PUBLIC_STARTER_SLUG,
             },
           ],
           successUrl: `/success`,
           authenticatedUsersOnly: true,
-        }),
+        })] : []),
         portal(),
         usage(),
-        webhooks({
-          secret:
-            process.env.POLAR_WEBHOOK_SECRET ||
-            (() => {
-              throw new Error('POLAR_WEBHOOK_SECRET environment variable is required');
-            })(),
+        ...(process.env.POLAR_WEBHOOK_SECRET ? [webhooks({
+          secret: process.env.POLAR_WEBHOOK_SECRET,
           onPayload: async ({ data, type }) => {
             if (
               type === 'subscription.created' ||
@@ -443,7 +431,7 @@ export const auth = betterAuth({
               }
             }
           },
-        }),
+        })] : []),
       ],
     }),
     nextCookies(),
