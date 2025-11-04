@@ -54,8 +54,8 @@ export const scira = customProvider({
     'scira-grok-3-mini': process.env.XAI_API_KEY ? xai('grok-3-mini') : xai('grok-4-latest'),
     'scira-grok-3': process.env.XAI_API_KEY ? xai('grok-3') : xai('grok-4-latest'),
     'scira-grok-4': process.env.XAI_API_KEY ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
-    'scira-grok-4-fast': process.env.XAI_API_KEY ? xai('grok-4-latest') : groq('llama-3.3-70b-versatile'),
-    'scira-grok-4-fast-think': process.env.XAI_API_KEY ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
+    'scira-grok-4-fast': process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+    'scira-grok-4-fast-think': process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
     'scira-code': process.env.XAI_API_KEY ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
     'scira-enhance': process.env.GOOGLE_GENERATIVE_AI_API_KEY ? google('gemini-2.5-flash') : xai('grok-4-latest'),
     'scira-follow-up': process.env.XAI_API_KEY
@@ -63,9 +63,9 @@ export const scira = customProvider({
       : process.env.GROQ_API_KEY
       ? groq('llama-3.3-70b-versatile')
       : xai('grok-4-latest'),
-    'scira-qwen-4b': huggingface.chat('Qwen/Qwen3-4B-Instruct-2507:nscale'),
+    'scira-qwen-4b': process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
     'scira-qwen-4b-thinking': wrapLanguageModel({
-      model: huggingface.chat('Qwen/Qwen3-4B-Thinking-2507:nscale'),
+      model: process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
       middleware: [middlewareWithStartWithReasoning],
     }),
     'scira-gpt-4.1-nano': openai('gpt-4.1-nano'),
@@ -79,11 +79,11 @@ export const scira = customProvider({
     'scira-o4-mini': openai('o4-mini'),
     'scira-gpt5-codex': openai('gpt-5-codex'),
     'scira-qwen-32b': wrapLanguageModel({
-      model: process.env.GROQ_API_KEY ? groq('qwen/qwen3-32b') : openai('gpt-4o'),
+      model: process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
       middleware,
     }),
     'scira-gpt-oss-20': wrapLanguageModel({
-      model: process.env.GROQ_API_KEY ? groq('openai/gpt-oss-20b') : openai('gpt-4o'),
+      model: process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
       middleware,
     }),
     'scira-gpt-oss-120': wrapLanguageModel({
