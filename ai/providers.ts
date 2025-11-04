@@ -34,8 +34,8 @@ const anannas = process.env.ANANNAS_API_KEY ? createOpenAI({
 
 export const scira = customProvider({
   languageModels: {
-    // Default model - using Anthropic Claude as primary (always available)
-    'scira-default': anthropic('claude-3-5-haiku-20241022'),
+    // Default model - using OpenAI (always available as required key)
+    'scira-default': openai('gpt-4o-mini'),
     'scira-nano': openai('gpt-4o-mini'),
     'scira-name': openai('gpt-4o-mini'), // For title generation
     'scira-grok-3-mini': process.env.XAI_API_KEY ? xai('grok-3-mini') : openai('gpt-4o'),
@@ -45,7 +45,7 @@ export const scira = customProvider({
     'scira-grok-4-fast-think': process.env.XAI_API_KEY ? xai('grok-4-fast') : openai('o1'),
     'scira-code': process.env.XAI_API_KEY ? xai('grok-code-fast-1') : openai('gpt-4o'),
     'scira-enhance': process.env.GROQ_API_KEY ? groq('moonshotai/kimi-k2-instruct-0905') : openai('gpt-4o'),
-    'scira-follow-up': anthropic('claude-3-5-haiku-20241022'),
+    'scira-follow-up': openai('gpt-4o-mini'),
     'scira-qwen-4b': huggingface.chat('Qwen/Qwen3-4B-Instruct-2507:nscale'),
     'scira-qwen-4b-thinking': wrapLanguageModel({
       model: huggingface.chat('Qwen/Qwen3-4B-Thinking-2507:nscale'),
