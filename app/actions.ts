@@ -170,8 +170,6 @@ export async function generateTitleFromUserMessage({ message }: { message: UIMes
     - do not write anything other than the title
     - do not use quotes or colons`,
       prompt: JSON.stringify(message),
-      // Removed providerOptions - not needed and causes errors with Groq
-      },
     });
 
     return title;
