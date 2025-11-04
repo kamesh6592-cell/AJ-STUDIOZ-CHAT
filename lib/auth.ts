@@ -43,10 +43,10 @@ function safeParseDate(value: string | Date | null | undefined): Date | null {
   return new Date(value);
 }
 
-const polarClient = new Polar({
+const polarClient = process.env.POLAR_ACCESS_TOKEN ? new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN,
   ...(process.env.NODE_ENV === 'production' ? {} : { server: 'sandbox' }),
-});
+}) : null;
 
 export const dodoPayments = process.env.DODO_PAYMENTS_API_KEY ? new DodoPayments({
   bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
@@ -266,7 +266,7 @@ export const auth = betterAuth({
         }),
       ],
     })] : []),
-    polar({
+    ...(polarClient ? [polar({
       client: polarClient,
       createCustomerOnSignUp: true,
       enableCustomerPortal: true,
@@ -439,7 +439,7 @@ export const auth = betterAuth({
           },
         })] : []),
       ] as any),
-    }),
+    })] : []),
     nextCookies(),
   ],
   trustedOrigins: [
