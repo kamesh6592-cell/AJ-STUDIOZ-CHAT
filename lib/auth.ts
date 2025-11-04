@@ -19,6 +19,7 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { db } from '@/lib/db';
 import { config } from 'dotenv';
 import { serverEnv } from '@/env/server';
+import { sendNewLoginEmail, sendWelcomeEmail } from '@/lib/email';
 import { checkout, polar, portal, usage, webhooks } from '@polar-sh/better-auth';
 import { Polar } from '@polar-sh/sdk';
 import {
@@ -63,6 +64,46 @@ export const auth = betterAuth({
   cookieCache: {
     enabled: true,
     maxAge: 5 * 60,
+  },
+  hooks: {
+    after: [
+      {
+        matcher(context) {
+          return context.path === '/sign-up/email' || context.path.includes('/callback/');
+        },
+        handler: async (context) => {
+          if (context.returned?.user) {
+            const user = context.returned.user;
+            // Send welcome email on new signup
+            await sendWelcomeEmail({
+              to: user.email,
+              userName: user.name,
+            });
+          }
+        },
+      },
+      {
+        matcher(context) {
+          return context.path === '/sign-in/email' || context.path.includes('/callback/');
+        },
+        handler: async (context) => {
+          if (context.returned?.session) {
+            const user = context.returned.user;
+            const session = context.returned.session;
+            
+            // Send login notification
+            await sendNewLoginEmail({
+              to: user.email,
+              userName: user.name,
+              loginTime: new Date().toUTCString(),
+              ipAddress: session.ipAddress || 'Unknown',
+              location: 'Unknown city',
+              browser: session.userAgent || 'Unknown browser',
+            });
+          }
+        },
+      },
+    ],
   },
   database: drizzleAdapter(db, {
     provider: 'pg',
