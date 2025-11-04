@@ -3,6 +3,10 @@ import { Tool } from 'ai';
 import { serverEnv } from '@/env/server';
 
 export function createMemoryTools(userId: string) {
+  if (!serverEnv.SUPERMEMORY_API_KEY) {
+    throw new Error('SUPERMEMORY_API_KEY not configured. Memory tools are unavailable.');
+  }
+  
   return supermemoryTools(serverEnv.SUPERMEMORY_API_KEY, {
     containerTags: [userId],
   });
