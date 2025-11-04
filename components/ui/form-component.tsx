@@ -1188,7 +1188,7 @@ const ModelSwitcher: React.FC<ModelSwitcherProps> = React.memo(
               <div className="flex items-center gap-4">
                 <CheckIcon className="size-4 text-primary flex-shrink-0" />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">Scira Lookout</p>
+                  <p className="text-sm font-medium text-foreground">AJ STUDIOZ Lookout</p>
                   <p className="text-xs text-muted-foreground">Automated search monitoring on your schedule</p>
                 </div>
               </div>
@@ -4016,7 +4016,7 @@ const FormComponent: React.FC<FormComponentProps> = ({
               <div className="flex items-center gap-4">
                 <CheckIcon className="size-4 text-primary flex-shrink-0" />
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-foreground">Scira Lookout</p>
+                  <p className="text-sm font-medium text-foreground">AJ STUDIOZ Lookout</p>
                   <p className="text-xs text-muted-foreground">Automated search monitoring on your schedule</p>
                 </div>
               </div>
