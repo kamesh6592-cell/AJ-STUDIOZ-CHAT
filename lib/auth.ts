@@ -54,6 +54,7 @@ export const dodoPayments = process.env.DODO_PAYMENTS_API_KEY ? new DodoPayments
 }) : null;
 
 export const auth = betterAuth({
+  baseURL: serverEnv.BETTER_AUTH_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000'),
   rateLimit: {
     max: 50,
     window: 60,
