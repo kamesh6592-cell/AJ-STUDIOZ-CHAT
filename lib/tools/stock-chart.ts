@@ -230,98 +230,104 @@ export const stockChartTool = tool({
 
     // 1. Tavily news search promises
     const tavilyPromises: { query: string; topic: string; index: number }[] = [];
-    for (const query of news_queries) {
-      tavilyPromises.push({ query, topic: 'finance', index: promiseIndex });
-      allPromises.push(
-        tvly
-          .search(query, {
-            topic: 'finance',
-            days: 7,
-            maxResults: 3,
-            searchDepth: 'advanced',
-          })
-          .catch((err) => ({ results: [], error: err.message })),
-      );
-      promiseMap.set(`tavily-finance-${query}`, promiseIndex++);
+    if (tvly) {
+      for (const query of news_queries) {
+        tavilyPromises.push({ query, topic: 'finance', index: promiseIndex });
+        allPromises.push(
+          tvly
+            .search(query, {
+              topic: 'finance',
+              days: 7,
+              maxResults: 3,
+              searchDepth: 'advanced',
+            })
+            .catch((err) => ({ results: [], error: err.message })),
+        );
+        promiseMap.set(`tavily-finance-${query}`, promiseIndex++);
 
-      tavilyPromises.push({ query, topic: 'news', index: promiseIndex });
-      allPromises.push(
-        tvly
-          .search(query, {
-            topic: 'news',
-            days: 7,
-            maxResults: 3,
-            searchDepth: 'advanced',
-          })
-          .catch((err) => ({ results: [], error: err.message })),
-      );
-      promiseMap.set(`tavily-news-${query}`, promiseIndex++);
+        tavilyPromises.push({ query, topic: 'news', index: promiseIndex });
+        allPromises.push(
+          tvly
+            .search(query, {
+              topic: 'news',
+              days: 7,
+              maxResults: 3,
+              searchDepth: 'advanced',
+            })
+            .catch((err) => ({ results: [], error: err.message })),
+        );
+        promiseMap.set(`tavily-news-${query}`, promiseIndex++);
+      }
     }
 
     // 2. Exa financial reports promises
     const exaPromises: { company: string; index: number }[] = [];
-    companies.forEach((company) => {
-      exaPromises.push({ company, index: promiseIndex });
-      allPromises.push(
-        exa
-          .searchAndContents(`${company} financial report analysis`, {
-            text: true,
-            category: 'financial report',
-            livecrawl: 'preferred',
-            type: 'hybrid',
-            numResults: 10,
-            summary: {
-              query: 'all important information relevent to the important for investors',
-            },
-          })
-          .catch((error: any) => {
-            console.error(`Exa search error for ${company}:`, error);
-            return { results: [] };
-          }),
-      );
-      promiseMap.set(`exa-${company}`, promiseIndex++);
-    });
+    if (exa) {
+      companies.forEach((company) => {
+        exaPromises.push({ company, index: promiseIndex });
+        allPromises.push(
+          exa
+            .searchAndContents(`${company} financial report analysis`, {
+              text: true,
+              category: 'financial report',
+              livecrawl: 'preferred',
+              type: 'hybrid',
+              numResults: 10,
+              summary: {
+                query: 'all important information relevent to the important for investors',
+              },
+            })
+            .catch((error: any) => {
+              console.error(`Exa search error for ${company}:`, error);
+              return { results: [] };
+            }),
+        );
+        promiseMap.set(`exa-${company}`, promiseIndex++);
+      });
+    }
 
     // 3. Valyu core data promises (stock prices and earnings)
     const stockQuery = `What are the stock prices for ${companies.join(' and ')} for time period ${time_period}?`;
 
-    allPromises.push(
-      valyu
-        .search(stockQuery, {
-          searchType: 'proprietary',
-          isToolCall: true,
-          includedSources: ['valyu/valyu-stocks-US'],
-          maxPrice: 100,
-        })
-        .catch((error) => {
-          console.error('Error fetching Valyu stock data:', error);
-          return null;
-        }),
-    );
-    promiseMap.set('valyu-stocks', promiseIndex++);
-
-    // Only fetch earnings if user is pro
-    if (actualIncludeEarnings) {
-      const earningsQuery = `What are the earnings for ${companies.join(' and ')} for time period ${time_period}?`;
+    if (valyu) {
       allPromises.push(
         valyu
-          .search(earningsQuery, {
+          .search(stockQuery, {
             searchType: 'proprietary',
             isToolCall: true,
-            includedSources: ['valyu/valyu-earnings-US'],
+            includedSources: ['valyu/valyu-stocks-US'],
             maxPrice: 100,
           })
           .catch((error) => {
-            console.error('Error fetching Valyu earnings data:', error);
+            console.error('Error fetching Valyu stock data:', error);
             return null;
           }),
       );
-      promiseMap.set('valyu-earnings', promiseIndex++);
+      promiseMap.set('valyu-stocks', promiseIndex++);
+
+      // Only fetch earnings if user is pro
+      if (actualIncludeEarnings) {
+        const earningsQuery = `What are the earnings for ${companies.join(' and ')} for time period ${time_period}?`;
+        allPromises.push(
+          valyu
+            .search(earningsQuery, {
+              searchType: 'proprietary',
+              isToolCall: true,
+              includedSources: ['valyu/valyu-earnings-US'],
+              maxPrice: 100,
+            })
+            .catch((error) => {
+              console.error('Error fetching Valyu earnings data:', error);
+              return null;
+            }),
+        );
+        promiseMap.set('valyu-earnings', promiseIndex++);
+      }
     }
 
     // 4. SEC filings promises
     const secPromises: { company: string; filingType: string; index: number }[] = [];
-    if (actualFilingTypes && actualFilingTypes.length > 0) {
+    if (actualFilingTypes && actualFilingTypes.length > 0 && valyu) {
       companies.forEach((company) => {
         actualFilingTypes.forEach((filingType) => {
           let secQuery = `Get the full ${filingType} filing for ${company} for the time period "${time_period}"`;
@@ -352,13 +358,14 @@ export const stockChartTool = tool({
     // 5. Additional financial data promises
     const financialPromises: { type: string; company?: string; index: number }[] = [];
 
-    // Company statistics
-    if (actualIncludeStatistics) {
-      companies.forEach((company) => {
-        financialPromises.push({ type: 'statistics', company, index: promiseIndex });
-        allPromises.push(
-          valyu
-            .search(`${company} company statistics`, {
+    if (valyu) {
+      // Company statistics
+      if (actualIncludeStatistics) {
+        companies.forEach((company) => {
+          financialPromises.push({ type: 'statistics', company, index: promiseIndex });
+          allPromises.push(
+            valyu
+              .search(`${company} company statistics`, {
               searchType: 'proprietary',
               isToolCall: true,
               includedSources: ['valyu/valyu-statistics-US'],
@@ -550,6 +557,7 @@ export const stockChartTool = tool({
       );
       promiseMap.set('active', promiseIndex++);
     }
+    } // End of valyu check
 
     // Execute all promises in parallel
     console.log(`Executing ${allPromises.length} API calls in parallel...`);
