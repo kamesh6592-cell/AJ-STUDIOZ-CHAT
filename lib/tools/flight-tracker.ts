@@ -18,6 +18,14 @@ export const flightTrackerTool = tool({
     flightNumber: string;
     scheduledDepartureDate: string;
   }) => {
+    // Check if Amadeus API credentials are configured
+    if (!serverEnv.AMADEUS_API_KEY || !serverEnv.AMADEUS_API_SECRET) {
+      return {
+        data: [],
+        error: 'Amadeus API credentials not configured. Flight tracking is unavailable.',
+      };
+    }
+
     const tokenResponse = await fetch('https://test.api.amadeus.com/v1/security/oauth2/token', {
       method: 'POST',
       headers: {
