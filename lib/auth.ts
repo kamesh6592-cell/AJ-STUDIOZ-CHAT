@@ -307,7 +307,7 @@ export const auth = betterAuth({
           ],
           successUrl: `/success`,
           authenticatedUsersOnly: true,
-        })] : []),
+        })] : []) as any,
         portal(),
         usage(),
         ...(process.env.POLAR_WEBHOOK_SECRET ? [webhooks({
@@ -431,7 +431,7 @@ export const auth = betterAuth({
               }
             }
           },
-        })] : []),
+        })] : []) as any,
       ],
     }),
     nextCookies(),
