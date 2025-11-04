@@ -26,6 +26,8 @@ export const serverEnv = createEnv({
     GOOGLE_CLIENT_SECRET: z.string().optional().default(""),
     TWITTER_CLIENT_ID: z.string().optional().default(""),
     TWITTER_CLIENT_SECRET: z.string().optional().default(""),
+    MICROSOFT_CLIENT_ID: z.string().optional().default(""),
+    MICROSOFT_CLIENT_SECRET: z.string().optional().default(""),
     
     // Optional Redis (can be added later)
     REDIS_URL: z.string().optional(),

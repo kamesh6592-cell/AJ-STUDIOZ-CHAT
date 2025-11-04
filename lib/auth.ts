@@ -106,11 +106,11 @@ export const auth = betterAuth({
           },
         }
       : {}),
-    ...(process.env.MICROSOFT_CLIENT_ID && process.env.MICROSOFT_CLIENT_SECRET
+    ...(serverEnv.MICROSOFT_CLIENT_ID && serverEnv.MICROSOFT_CLIENT_SECRET
       ? {
           microsoft: {
-            clientId: process.env.MICROSOFT_CLIENT_ID,
-            clientSecret: process.env.MICROSOFT_CLIENT_SECRET,
+            clientId: serverEnv.MICROSOFT_CLIENT_ID,
+            clientSecret: serverEnv.MICROSOFT_CLIENT_SECRET,
             prompt: 'select_account', // Forces account selection
           },
         }
