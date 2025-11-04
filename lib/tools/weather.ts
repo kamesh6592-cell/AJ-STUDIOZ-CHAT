@@ -24,6 +24,10 @@ export const weatherTool = tool({
     longitude?: number | null;
   }) => {
     try {
+      if (!serverEnv.OPENWEATHER_API_KEY) {
+        throw new Error('OPENWEATHER_API_KEY is not configured');
+      }
+      
       let lat = latitude;
       let lng = longitude;
       let locationName = location;
