@@ -83,31 +83,11 @@ const SignInButton = ({ title, provider, loading, setLoading, callbackURL, icon 
     className="relative w-full h-12 text-sm font-normal bg-muted/50 hover:bg-muted transition-all duration-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-start px-4 gap-3 group"
     disabled={loading}
     onClick={async () => {
-      await signIn.social(
-        {
-          provider,
-          callbackURL,
-        },
-        {
-          onRequest: () => {
-            setLoading(true);
-          },
-          onSuccess: async () => {
-            // Wait for session to be established after OAuth redirect
-            setTimeout(async () => {
-              try {
-                await fetch('/api/auth/send-email', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ type: 'login' }),
-                });
-              } catch (error) {
-                console.error('Failed to send email notification:', error);
-              }
-            }, 2000); // Wait 2 seconds for session to be ready
-          },
-        },
-      );
+      setLoading(true);
+      await signIn.social({
+        provider,
+        callbackURL: '/auth-success', // Redirect to email notification page
+      });
     }}
   >
     <div className="w-5 h-5 flex items-center justify-center">
