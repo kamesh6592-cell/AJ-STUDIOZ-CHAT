@@ -51,6 +51,17 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // Check if BLOB_READ_WRITE_TOKEN is configured
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      console.error('BLOB_READ_WRITE_TOKEN is not configured');
+      return NextResponse.json(
+        { 
+          error: 'File upload service not configured. Please add BLOB_READ_WRITE_TOKEN to environment variables.' 
+        }, 
+        { status: 503 }
+      );
+    }
+
     // Use a different prefix for authenticated vs unauthenticated uploads
     const prefix = isAuthenticated ? 'auth' : 'public';
 
@@ -68,6 +79,13 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('Error uploading file:', error);
-    return NextResponse.json({ error: 'Failed to upload file' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json(
+      { 
+        error: 'Failed to upload file', 
+        details: errorMessage 
+      }, 
+      { status: 500 }
+    );
   }
 }

@@ -71,6 +71,39 @@ Your project also supports these alternative search providers (all optional):
 
 ---
 
+## 📦 File Upload Storage (Required for Image/PDF uploads)
+
+### 5. **Vercel Blob Storage** (BLOB_READ_WRITE_TOKEN)
+**What it does:** Stores uploaded images and PDF files with global CDN distribution.
+
+**How to get it:**
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+2. Click **Storage** in top navigation
+3. Click **Create Database** → Select **Blob**
+4. Name it: `ajstudioz-blob`
+5. Click **Create** → **Connect Project**
+6. Select **meowihh** project
+7. Token is automatically added to environment variables
+
+**Pricing:**
+- **Free (Hobby):** 1 GB storage, 100 GB bandwidth/month
+- **Pro:** 100 GB storage, 1 TB bandwidth/month ($20/month)
+
+**Features:**
+- Fast global CDN
+- Automatic compression
+- Supports: JPEG, PNG, GIF, PDF
+- Max file size: 5 MB
+
+**Detailed Setup Guide:** See `VERCEL_BLOB_SETUP.md`
+
+**Add to Vercel:**
+```bash
+BLOB_READ_WRITE_TOKEN=vercel_blob_rw_XXXXXXXXXX
+```
+
+---
+
 ## 📝 How to Add API Keys to Your Project
 
 ### Option 1: Vercel Dashboard (Recommended for Production)
