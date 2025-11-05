@@ -122,65 +122,6 @@ export const auth = betterAuth({
         }
       : {}),
   },
-  hooks: {
-    after: [
-      {
-        matcher: (context) => {
-          return context.path === '/sign-up/social' || context.path === '/sign-up/email';
-        },
-        handler: async (context) => {
-          // Send welcome email to new users
-          try {
-            const user = context.response.user;
-            if (user && user.email && user.name) {
-              console.log('📧 Sending welcome email to:', user.email);
-              await sendWelcomeEmail({
-                to: user.email,
-                userName: user.name,
-              });
-              console.log('✅ Welcome email sent successfully');
-            }
-          } catch (error) {
-            console.error('❌ Failed to send welcome email:', error);
-            // Don't block the sign-up process
-          }
-        },
-      },
-      {
-        matcher: (context) => {
-          return context.path === '/sign-in/social' || context.path === '/sign-in/email';
-        },
-        handler: async (context) => {
-          // Send login notification
-          try {
-            const user = context.response.user;
-            const request = context.request;
-            
-            if (user && user.email && user.name) {
-              const userAgent = request.headers?.get?.('user-agent') || 'Unknown browser';
-              const ip = request.headers?.get?.('x-forwarded-for') || 
-                        request.headers?.get?.('x-real-ip') || 
-                        'Unknown IP';
-              
-              console.log('📧 Sending login notification to:', user.email);
-              await sendNewLoginEmail({
-                to: user.email,
-                userName: user.name,
-                loginTime: new Date().toUTCString(),
-                ipAddress: ip,
-                location: 'Unknown city, IN',
-                browser: userAgent,
-              });
-              console.log('✅ Login notification sent successfully');
-            }
-          } catch (error) {
-            console.error('❌ Failed to send login notification:', error);
-            // Don't block the login process
-          }
-        },
-      },
-    ],
-  },
   pluginRoutes: {
     autoNamespace: true,
   },

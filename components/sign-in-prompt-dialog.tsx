@@ -43,6 +43,18 @@ const SignInButton = ({ provider, loading, setLoading }: SignInButtonProps) => {
             onRequest: () => {
               setLoading(true);
             },
+            onSuccess: async () => {
+              // Trigger email notification after successful sign-in
+              try {
+                await fetch('/api/auth/send-email', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ type: 'login' }),
+                });
+              } catch (error) {
+                console.error('Failed to send email notification:', error);
+              }
+            },
           },
         );
       }}
