@@ -528,12 +528,18 @@ export async function POST(req: Request) {
           }
 
           const memoryTools = createMemoryTools(user.id);
-          return {
+          const toolsWithUser = {
             ...baseTools,
-            search_memories: memoryTools.searchMemories as any,
-            add_memory: memoryTools.addMemory as any,
             connectors_search: createConnectorsSearchTool(user.id, selectedConnectors),
           } as any;
+
+          // Add memory tools only if available
+          if (memoryTools) {
+            toolsWithUser.search_memories = memoryTools.searchMemories;
+            toolsWithUser.add_memory = memoryTools.addMemory;
+          }
+
+          return toolsWithUser;
         })(),
         experimental_repairToolCall: async ({ toolCall, tools, inputSchema, error }) => {
           if (NoSuchToolError.isInstance(error)) {
