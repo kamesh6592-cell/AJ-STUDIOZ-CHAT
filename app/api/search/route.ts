@@ -642,9 +642,23 @@ export async function POST(req: Request) {
       );
     },
     onError(error) {
-      console.log('Error: ', error);
-      if (error instanceof Error && error.message.includes('Rate Limit')) {
-        return 'Oops, you have reached the rate limit! Please try again later.';
+      console.error('❌ Stream Error:', error);
+      console.error('Error name:', error?.name);
+      console.error('Error message:', error?.message);
+      console.error('Error stack:', error?.stack);
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Rate Limit')) {
+          return 'Oops, you have reached the rate limit! Please try again later.';
+        }
+        if (error.message.includes('API key')) {
+          return 'AI service configuration error. Please check your API keys in Vercel environment variables.';
+        }
+        if (error.message.includes('401') || error.message.includes('403')) {
+          return 'Authentication failed with AI provider. Please verify your API keys are correct.';
+        }
+        // Return more specific error message for debugging
+        return `Error: ${error.message}`;
       }
       return 'Oops, an error occurred!';
     },
@@ -677,16 +691,35 @@ export async function POST(req: Request) {
   // }
   return new Response(stream.pipeThrough(new JsonToSseTransformStream()));
   } catch (error: any) {
-    console.error('API POST Error:', error);
+    console.error('❌ API POST Error:', error);
+    console.error('Error type:', error?.constructor?.name);
+    console.error('Error message:', error?.message);
+    console.error('Error stack:', error?.stack);
+    console.error('Error cause:', error?.cause);
+    
     // Return proper error response
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
+    
+    // Check for API key errors
+    if (error?.message?.includes('API key') || error?.message?.includes('401') || error?.message?.includes('403')) {
+      return Response.json(
+        { 
+          code: 'configuration_error',
+          message: 'AI service authentication failed. Please verify your API keys in Vercel environment variables.',
+          cause: error?.message || 'API key validation failed'
+        },
+        { status: 500 }
+      );
+    }
+    
     return Response.json(
       { 
         code: 'bad_request:api',
         message: 'An error occurred while processing your request',
-        cause: error?.message || 'Unknown error'
+        cause: error?.message || 'Unknown error',
+        details: process.env.NODE_ENV === 'development' ? error?.stack : undefined
       },
       { status: 500 }
     );

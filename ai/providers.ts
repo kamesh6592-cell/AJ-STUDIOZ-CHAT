@@ -17,6 +17,15 @@ const middlewareWithStartWithReasoning = extractReasoningMiddleware({
   startWithReasoning: true,
 });
 
+// Helper to check if API key is valid (not a placeholder)
+const isValidApiKey = (key: string | undefined): boolean => {
+  if (!key) return false;
+  if (key.includes('placeholder')) return false;
+  if (key.includes('test-key')) return false;
+  if (key === 'your-key-here') return false;
+  return true;
+};
+
 const huggingface = createOpenAI({
   baseURL: 'https://router.huggingface.co/v1',
   apiKey: process.env.HF_TOKEN,
@@ -35,37 +44,37 @@ const anannas = process.env.ANANNAS_API_KEY ? createOpenAI({
 export const scira = customProvider({
   languageModels: {
     // Default model - Use Gemini 2.5 Flash (user requested)
-    'scira-default': process.env.GOOGLE_GENERATIVE_AI_API_KEY 
+    'scira-default': isValidApiKey(process.env.GOOGLE_GENERATIVE_AI_API_KEY) 
       ? google('gemini-2.5-flash')
-      : process.env.GROQ_API_KEY
+      : isValidApiKey(process.env.GROQ_API_KEY)
       ? groq('llama-3.3-70b-versatile')
-      : process.env.ANTHROPIC_API_KEY
+      : isValidApiKey(process.env.ANTHROPIC_API_KEY)
       ? anthropic('claude-sonnet-4-20250514')
       : google('gemini-2.5-flash'), // Final fallback
     
-    'scira-nano': process.env.GROQ_API_KEY
+    'scira-nano': isValidApiKey(process.env.GROQ_API_KEY)
       ? groq('llama-3.3-70b-versatile')
       : xai('grok-4-latest'),
     
-    'scira-name': process.env.GROQ_API_KEY
+    'scira-name': isValidApiKey(process.env.GROQ_API_KEY)
       ? groq('llama-3.3-70b-versatile')
       : xai('grok-4-latest'),
     
-    'scira-grok-3-mini': process.env.XAI_API_KEY ? xai('grok-3-mini') : xai('grok-4-latest'),
-    'scira-grok-3': process.env.XAI_API_KEY ? xai('grok-3') : xai('grok-4-latest'),
-    'scira-grok-4': process.env.XAI_API_KEY ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
-    'scira-grok-4-fast': process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
-    'scira-grok-4-fast-think': process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
-    'scira-code': process.env.XAI_API_KEY ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
-    'scira-enhance': process.env.GOOGLE_GENERATIVE_AI_API_KEY ? google('gemini-2.5-flash') : xai('grok-4-latest'),
-    'scira-follow-up': process.env.XAI_API_KEY
+    'scira-grok-3-mini': isValidApiKey(process.env.XAI_API_KEY) ? xai('grok-3-mini') : xai('grok-4-latest'),
+    'scira-grok-3': isValidApiKey(process.env.XAI_API_KEY) ? xai('grok-3') : xai('grok-4-latest'),
+    'scira-grok-4': isValidApiKey(process.env.XAI_API_KEY) ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
+    'scira-grok-4-fast': isValidApiKey(process.env.GROQ_API_KEY) ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+    'scira-grok-4-fast-think': isValidApiKey(process.env.GROQ_API_KEY) ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+    'scira-code': isValidApiKey(process.env.XAI_API_KEY) ? xai('grok-4-latest') : anthropic('claude-sonnet-4-20250514'),
+    'scira-enhance': isValidApiKey(process.env.GOOGLE_GENERATIVE_AI_API_KEY) ? google('gemini-2.5-flash') : xai('grok-4-latest'),
+    'scira-follow-up': isValidApiKey(process.env.XAI_API_KEY)
       ? xai('grok-4-latest')
-      : process.env.GROQ_API_KEY
+      : isValidApiKey(process.env.GROQ_API_KEY)
       ? groq('llama-3.3-70b-versatile')
       : xai('grok-4-latest'),
-    'scira-qwen-4b': process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+    'scira-qwen-4b': isValidApiKey(process.env.GROQ_API_KEY) ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
     'scira-qwen-4b-thinking': wrapLanguageModel({
-      model: process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+      model: isValidApiKey(process.env.GROQ_API_KEY) ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
       middleware: [middlewareWithStartWithReasoning],
     }),
     'scira-gpt-4.1-nano': openai('gpt-4.1-nano'),
@@ -79,15 +88,15 @@ export const scira = customProvider({
     'scira-o4-mini': openai('o4-mini'),
     'scira-gpt5-codex': openai('gpt-5-codex'),
     'scira-qwen-32b': wrapLanguageModel({
-      model: process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+      model: isValidApiKey(process.env.GROQ_API_KEY) ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
       middleware,
     }),
     'scira-gpt-oss-20': wrapLanguageModel({
-      model: process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+      model: isValidApiKey(process.env.GROQ_API_KEY) ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
       middleware,
     }),
     'scira-gpt-oss-120': wrapLanguageModel({
-      model: process.env.GROQ_API_KEY ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+      model: isValidApiKey(process.env.GROQ_API_KEY) ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
       middleware,
     }),
     'scira-deepseek-chat': huggingface.chat('deepseek-ai/DeepSeek-V3'),
@@ -114,16 +123,16 @@ export const scira = customProvider({
       model: huggingface.chat('Qwen/Qwen3-Next-80B-A3B-Thinking:hyperbolic'),
       middleware: [middlewareWithStartWithReasoning],
     }),
-    'scira-qwen-3-max': process.env.HF_TOKEN ? huggingface.chat('Qwen/Qwen3-Max-70B-A22B-Instruct:nebius') : groq('llama-3.3-70b-versatile'),
-    'scira-qwen-3-max-preview': process.env.HF_TOKEN ? huggingface.chat('Qwen/Qwen3-Max-70B-A22B-Instruct:nebius') : groq('llama-3.3-70b-versatile'),
+    'scira-qwen-3-max': isValidApiKey(process.env.HF_TOKEN) ? huggingface.chat('Qwen/Qwen3-Max-70B-A22B-Instruct:nebius') : groq('llama-3.3-70b-versatile'),
+    'scira-qwen-3-max-preview': isValidApiKey(process.env.HF_TOKEN) ? huggingface.chat('Qwen/Qwen3-Max-70B-A22B-Instruct:nebius') : groq('llama-3.3-70b-versatile'),
     'scira-qwen-235': huggingface.chat('Qwen/Qwen3-235B-A22B-Instruct-2507:fireworks-ai'),
     'scira-qwen-235-think': wrapLanguageModel({
       model: huggingface.chat('Qwen/Qwen3-235B-A22B-Thinking-2507:fireworks-ai'),
       middleware: [middlewareWithStartWithReasoning],
     }),
-    'scira-glm-air': process.env.HF_TOKEN ? huggingface.chat('zai-org/GLM-4.6:novita') : groq('llama-3.3-70b-versatile'),
+    'scira-glm-air': isValidApiKey(process.env.HF_TOKEN) ? huggingface.chat('zai-org/GLM-4.6:novita') : groq('llama-3.3-70b-versatile'),
     'scira-glm': wrapLanguageModel({
-      model: process.env.HF_TOKEN ? huggingface.chat('zai-org/GLM-4.6:novita') : groq('llama-3.3-70b-versatile'),
+      model: isValidApiKey(process.env.HF_TOKEN) ? huggingface.chat('zai-org/GLM-4.6:novita') : groq('llama-3.3-70b-versatile'),
       middleware,
     }),
     'scira-glm-4.6': wrapLanguageModel({
@@ -132,7 +141,7 @@ export const scira = customProvider({
     }),
     'scira-cmd-a': cohere('command-a-03-2025'),
     'scira-cmd-a-think': cohere('command-a-reasoning-08-2025'),
-    'scira-kimi-k2-v2': process.env.GROQ_API_KEY ? groq('moonshotai/kimi-k2-instruct-0905') : openai('gpt-4o'),
+    'scira-kimi-k2-v2': isValidApiKey(process.env.GROQ_API_KEY) ? groq('moonshotai/kimi-k2-instruct-0905') : openai('gpt-4o'),
     'scira-haiku': anthropic('claude-3-5-haiku-20241022'), // Changed from Anannas to direct Anthropic
     'scira-mistral-medium': mistral('mistral-medium-2508'),
     'scira-magistral-small': mistral('magistral-small-2509'),
