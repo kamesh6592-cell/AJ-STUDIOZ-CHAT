@@ -255,10 +255,13 @@ export default function PricingTable({ subscriptionDetails, user }: PricingTable
         </Link>
 
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-medium text-foreground mb-4 font-be-vietnam-pro">Pricing</h1>
-          <p className="text-xl text-muted-foreground">Get Pro access with Indian payment methods</p>
-          <Badge variant="secondary" className="mt-4">
-            🇮🇳 UPI, Cards, Net Banking & Wallets supported
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900/30 dark:to-blue-900/30 px-4 py-2 rounded-full border border-green-200 dark:border-green-800 mb-4">
+            <span className="text-green-600 dark:text-green-400 font-medium text-sm">🎉 LAUNCH SPECIAL</span>
+          </div>
+          <h1 className="text-4xl font-medium text-foreground mb-4 font-be-vietnam-pro">Affordable AI Power</h1>
+          <p className="text-xl text-muted-foreground">Unlimited AI research for just ₹249/month</p>
+          <Badge variant="secondary" className="mt-4 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300">
+            🇮🇳 All Indian payment methods • Instant activation
           </Badge>
         </div>
       </div>
@@ -349,7 +352,7 @@ export default function PricingTable({ subscriptionDetails, user }: PricingTable
                       </span>
                     </div>
                   ) : (
-                    <span className="text-4xl font-light">₹{PRICING.PRO_MONTHLY_INR}</span>
+                    <span className="text-4xl font-light text-green-600 dark:text-green-400">₹{PRICING.PRO_MONTHLY_INR}</span>
                   )}
                   <span className="text-muted-foreground ml-2">+GST</span>
                 </div>
@@ -393,15 +396,20 @@ export default function PricingTable({ subscriptionDetails, user }: PricingTable
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <Button className="w-full group" onClick={handleCheckout}>
-                    {!user ? 'Sign up for Pro' : `Pay ₹${getDiscountedPrice(PRICING.PRO_MONTHLY_INR, true)} + GST`}
+                  <Button className="w-full group bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white font-semibold py-3 h-12" onClick={handleCheckout}>
+                    {!user ? '🚀 Get Started - ₹249' : `🎉 Upgrade Now - ₹${getDiscountedPrice(PRICING.PRO_MONTHLY_INR, true)}`}
                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
+                  <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                    <p className="text-sm text-green-800 dark:text-green-200 text-center font-medium">
+                      🎊 Launch Special: 80% OFF • Limited Time
+                    </p>
+                    <p className="text-xs text-green-700 dark:text-green-300 text-center mt-1">
+                      🇮🇳 UPI, Cards, Net Banking • Instant Activation
+                    </p>
+                  </div>
                   <p className="text-xs text-muted-foreground text-center">
-                    🇮🇳 UPI, Cards, Net Banking, Wallets
-                  </p>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Powered by Cashfree & DodoPayments
+                    Secure payments by Cashfree & DodoPayments
                   </p>
                   {shouldShowDiscount() && discountConfig.discountAvail && (
                     <p className="text-xs text-primary text-center font-medium">{discountConfig.discountAvail}</p>

@@ -5,8 +5,8 @@ export const SEARCH_LIMITS = {
 } as const;
 
 export const PRICING = {
-  PRO_MONTHLY: 15, // USD
-  PRO_MONTHLY_INR: 1299, // INR for Indian users
+  PRO_MONTHLY: 3, // USD - Affordable pricing
+  PRO_MONTHLY_INR: 249, // INR for Indian users - Affordable pricing
 } as const;
 
 export const CURRENCIES = {

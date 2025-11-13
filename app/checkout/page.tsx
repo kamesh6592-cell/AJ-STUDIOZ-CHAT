@@ -257,50 +257,67 @@ export default function CheckoutPage() {
       {/* Header */}
       <div className="max-w-2xl mx-auto px-6 pt-8 pb-8">
         <div className="text-center">
-          <CreditCard className="w-12 h-12 mx-auto mb-4 text-zinc-600 dark:text-zinc-400" />
+          {/* AJ STUDIOZ Logo */}
+          <div className="flex items-center justify-center mb-6">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl p-3 shadow-lg">
+              <span className="text-2xl font-bold tracking-wider">AJ</span>
+            </div>
+            <div className="ml-3">
+              <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">AJ STUDIOZ</h2>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">AI-Powered Research</p>
+            </div>
+          </div>
           <h1 className="text-[2rem] font-medium tracking-tight text-zinc-900 dark:text-zinc-100 mb-4 leading-tight">
-            Checkout
+            Upgrade to Pro
           </h1>
           <p className="text-zinc-600 dark:text-zinc-400 text-lg leading-relaxed">
-            Complete your one-time payment for AJ STUDIOZ Pro
+            Unlock unlimited AI-powered research for just ₹249
           </p>
 
-          {/* Payment Available Notice */}
-          <div className="mt-6 mb-6">
-            <div className="border border-green-200 rounded-lg p-6 bg-green-50/30 dark:border-green-800 dark:bg-green-950/30">
-              <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="flex-shrink-0 mt-0.5">
-                    <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 space-y-2">
-                    <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                      Secure payment available
-                    </p>
-                    <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed">
-                      Complete your one-time payment securely with UPI, cards, or net banking. 
-                      Instant activation after successful payment.
-                    </p>
-                  </div>
+          {/* What You Get */}
+          <div className="mt-8 mb-8">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4 text-center">
+                🚀 What you get with Pro
+              </h3>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="text-blue-800 dark:text-blue-200">Unlimited AI searches</span>
                 </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                  <span className="text-purple-800 dark:text-purple-200">All AI models</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-green-800 dark:text-green-200">PDF analysis</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                  <span className="text-orange-800 dark:text-orange-200">Priority support</span>
+                </div>
+              </div>
+              <div className="mt-4 p-3 bg-white/50 dark:bg-black/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
+                  💳 Secure payment with UPI, Cards, Net Banking • ⚡ Instant activation
+                </p>
               </div>
             </div>
           </div>
 
           <div className="mt-4 space-y-2 opacity-50">
-            <div className="inline-flex items-center bg-secondary text-secondary-foreground px-4 py-2 rounded-full text-sm">
-              🇮🇳 One-time payment:{' '}
+            <div className="inline-flex items-center bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 border border-green-200 dark:border-green-800 text-green-800 dark:text-green-200 px-6 py-3 rounded-full text-base font-medium">
+              🚀 Special Launch Price:{' '}
               {shouldShowDiscount() ? (
                 <>
                   <span className="line-through text-muted-foreground mr-2">₹{PRICING.PRO_MONTHLY_INR}</span>₹
                   {getDiscountedPrice(PRICING.PRO_MONTHLY_INR, true)}
                 </>
               ) : (
-                `₹${PRICING.PRO_MONTHLY_INR}`
+                <span className="ml-2 font-bold text-lg">₹{PRICING.PRO_MONTHLY_INR}</span>
               )}{' '}
-              for 1 month access
+              <span className="ml-2">for 1 month access</span>
             </div>
             <div className="text-xs text-muted-foreground text-center space-y-1">
               <p>GST and tax details will be calculated and shown during checkout</p>
@@ -317,10 +334,15 @@ export default function CheckoutPage() {
 
       {/* Checkout Form */}
       <div className="max-w-2xl mx-auto px-6 pb-24">
-        <Card>
-          <CardHeader>
-            <CardTitle>Billing Information</CardTitle>
-            <CardDescription>Please provide your details to complete the checkout process</CardDescription>
+        <Card className="border-2 border-blue-100 dark:border-blue-900 shadow-xl">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <CreditCard className="w-4 h-4 text-white" />
+              </div>
+              <CardTitle className="text-xl">Billing Information</CardTitle>
+            </div>
+            <CardDescription className="text-base">Complete your details for secure checkout • Only takes 2 minutes</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -439,24 +461,46 @@ export default function CheckoutPage() {
                 </div>
 
                 {/* Submit Button */}
-                <div className="pt-6 border-t">
+                <div className="pt-6 border-t border-blue-100 dark:border-blue-800">
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/10 dark:to-purple-900/10 p-4 rounded-lg mb-4">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-blue-900 dark:text-blue-100">Total Amount:</span>
+                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">₹{PRICING.PRO_MONTHLY_INR}</span>
+                    </div>
+                    <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">Includes all taxes • 30-day money-back guarantee</p>
+                  </div>
+                  
                   <Button
                     type="submit"
-                    className="w-full h-12 bg-black dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-200 text-white dark:text-black font-medium text-sm tracking-[-0.01em] transition-all duration-200 disabled:opacity-50"
+                    className="w-full h-14 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold text-base shadow-lg transition-all duration-200 disabled:opacity-50"
                     disabled={isLoading}
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Processing...
+                        <Loader2 className="w-5 h-5 animate-spin mr-3" />
+                        Processing Payment...
                       </>
                     ) : (
-                      <>Continue to Payment</>  
+                      <>
+                        <CreditCard className="w-5 h-5 mr-3" />
+                        Complete Purchase - ₹{PRICING.PRO_MONTHLY_INR}
+                      </>  
                     )}
                   </Button>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center mt-3">
-                    Secure payment powered by DodoPayments
-                  </p>
+                  
+                  <div className="flex items-center justify-center gap-4 mt-4 text-xs text-zinc-500 dark:text-zinc-400">
+                    <span className="flex items-center gap-1">
+                      🔒 SSL Secured
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      ⚡ Instant Activation
+                    </span>
+                    <span>•</span>
+                    <span className="flex items-center gap-1">
+                      💳 All Payment Methods
+                    </span>
+                  </div>
                 </div>
               </form>
             </Form>
