@@ -159,40 +159,15 @@ export default function PricingTable({ subscriptionDetails, user }: PricingTable
     return result;
   };
 
-  const handleCheckout = async (productId: string, slug: string, paymentMethod?: 'dodo' | 'polar') => {
+  const handleCheckout = async () => {
     if (!user) {
       router.push('/sign-up');
       return;
     }
 
     try {
-      if (paymentMethod === 'dodo') {
-        router.push('/checkout');
-      } else {
-        // Auto-apply discount if available
-        const discountIdToUse = discountConfig.discountId || '';
-
-        // TEMPORARY: Force disable all discounts
-        const discountsDisabled = process.env.NEXT_PUBLIC_DISABLE_DISCOUNTS === 'true';
-
-        // Show special messaging for student discounts
-        if (!discountsDisabled && discountConfig.isStudentDiscount) {
-          toast.success('🎓 Student discount applied automatically!');
-        } else if (!discountsDisabled && discountIdToUse && (discountConfig.enabled || (discountConfig.dev || process.env.NODE_ENV === 'development'))) {
-          toast.success(`💰 Discount "${discountConfig.code}" applied automatically!`);
-        }
-
-        await authClient.checkout({
-          products: [productId],
-          slug: slug,
-          allowDiscountCodes: true,
-          ...(discountIdToUse !== '' &&
-            !discountsDisabled &&
-            (discountConfig.enabled || (discountConfig.dev || process.env.NODE_ENV === 'development')) && {
-            discountId: discountIdToUse,
-          }),
-        });
-      }
+      // Always use DodoPayments/Cashfree checkout
+      router.push('/checkout');
     } catch (error) {
       console.error('Checkout failed:', error);
       toast.error('Something went wrong. Please try again.');
@@ -201,50 +176,60 @@ export default function PricingTable({ subscriptionDetails, user }: PricingTable
 
   const handleManageSubscription = async () => {
     try {
-      const proSource = getProAccessSource();
-      if (proSource === 'dodo') {
-        await betterauthClient.dodopayments.customer.portal();
-      } else {
-        await authClient.customer.portal();
-      }
+      // Always use DodoPayments customer portal
+      await betterauthClient.dodopayments.customer.portal();
     } catch (error) {
       console.error('Failed to open customer portal:', error);
       toast.error('Failed to open subscription management');
     }
   };
 
-  const STARTER_TIER = process.env.NEXT_PUBLIC_STARTER_TIER;
-  const STARTER_SLUG = process.env.NEXT_PUBLIC_STARTER_SLUG;
+  // Payment provider configuration (DodoPayments + Cashfree only)
+  const PREMIUM_TIER = process.env.NEXT_PUBLIC_PREMIUM_TIER || 'aj_studioz_pro_dodo';
+  const PREMIUM_SLUG = process.env.NEXT_PUBLIC_PREMIUM_SLUG || 'pro-plan-dodo';
+  const CASHFREE_PRODUCT_ID = process.env.NEXT_PUBLIC_CASHFREE_PRODUCT_ID || 'aj_studioz_pro_1299';
 
-  if (!STARTER_TIER || !STARTER_SLUG) {
-    console.error('Missing required environment variables');
-    throw new Error('Missing required environment variables for Starter tier');
+  // Check if we have payment configuration
+  if (!PREMIUM_TIER || !PREMIUM_SLUG || !CASHFREE_PRODUCT_ID) {
+    console.error('Missing payment provider configuration:', {
+      PREMIUM_TIER,
+      PREMIUM_SLUG,
+      CASHFREE_PRODUCT_ID,
+      env: process.env.NODE_ENV
+    });
+    
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="max-w-md mx-auto p-6 text-center">
+          <h2 className="text-2xl font-bold mb-4">Payment Configuration Missing</h2>
+          <p className="text-muted-foreground mb-4">
+            Indian payment providers are not configured. Please set up:
+          </p>
+          <ul className="text-sm text-left bg-muted p-4 rounded-lg space-y-2">
+            <li>• NEXT_PUBLIC_PREMIUM_TIER</li>
+            <li>• NEXT_PUBLIC_PREMIUM_SLUG</li>
+            <li>• NEXT_PUBLIC_CASHFREE_PRODUCT_ID</li>
+          </ul>
+          <p className="text-xs text-muted-foreground mt-4">
+            Configure these in your Vercel environment variables.
+          </p>
+        </div>
+      </div>
+    );
   }
 
-  // Check if user has active Polar subscription
-  const hasPolarSubscription = () => {
-    return (
-      subscriptionDetails.hasSubscription &&
-      subscriptionDetails.subscription?.productId === STARTER_TIER &&
-      subscriptionDetails.subscription?.status === 'active'
-    );
-  };
-
-  // Check if user has active Dodo payments subscription
+  // Check if user has active DodoPayments subscription
   const hasDodoSubscription = () => {
     return user?.isProUser === true && user?.proSource === 'dodo';
   };
 
-  // Check if user has any Pro status (Polar or DodoPayments)
+  // Check if user has Pro status (DodoPayments only)
   const hasProAccess = () => {
-    const polarAccess = hasPolarSubscription();
-    const dodoAccess = hasDodoSubscription();
-    return polarAccess || dodoAccess;
+    return hasDodoSubscription();
   };
 
   // Get the source of Pro access for display
   const getProAccessSource = () => {
-    if (hasPolarSubscription()) return 'polar';
     if (hasDodoSubscription()) return 'dodo';
     return null;
   };
@@ -271,12 +256,10 @@ export default function PricingTable({ subscriptionDetails, user }: PricingTable
 
         <div className="text-center mb-16">
           <h1 className="text-4xl font-medium text-foreground mb-4 font-be-vietnam-pro">Pricing</h1>
-          <p className="text-xl text-muted-foreground">Choose the plan that works for you</p>
-          {!location.loading && location.isIndia && !discountConfig.isStudentDiscount && (
-            <Badge variant="secondary" className="mt-4">
-              🇮🇳 Special India pricing available
-            </Badge>
-          )}
+          <p className="text-xl text-muted-foreground">Get Pro access with Indian payment methods</p>
+          <Badge variant="secondary" className="mt-4">
+            🇮🇳 UPI, Cards, Net Banking & Wallets supported
+          </Badge>
         </div>
       </div>
 
@@ -348,71 +331,27 @@ export default function PricingTable({ subscriptionDetails, user }: PricingTable
 
               {/* Pricing Display */}
               {hasProAccess() ? (
-                // Show user's current pricing method
-                getProAccessSource() === 'dodo' ? (
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-light">₹{PRICING.PRO_MONTHLY_INR}</span>
-                    <span className="text-muted-foreground ml-2">+GST</span>
-                  </div>
-                ) : (
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-light">$15</span>
-                    <span className="text-muted-foreground ml-2">/month</span>
-                  </div>
-                )
-              ) : !location.loading && location.isIndia && !discountConfig.isStudentDiscount ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* INR Option */}
-                    <div className="p-3 border rounded-lg bg-muted/50">
-                      <div className="space-y-1">
-                        {shouldShowDiscount() ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground line-through">
-                              ₹{PRICING.PRO_MONTHLY_INR}
-                            </span>
-                            <span className="text-xl font-light">
-                              ₹{getDiscountedPrice(PRICING.PRO_MONTHLY_INR, true)}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className="text-xl font-light">₹{PRICING.PRO_MONTHLY_INR}</span>
-                        )}
-                        <div className="text-xs text-muted-foreground">+18% GST</div>
-                        <div className="text-xs">1 month access</div>
-                        <div className="text-xs text-muted-foreground">🇮🇳 UPI, Cards, QR</div>
-                      </div>
-                    </div>
-
-                    {/* USD Option */}
-                    <div className="p-3 border rounded-lg">
-                      <div className="space-y-1">
-                        {shouldShowDiscount() ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground line-through">${PRICING.PRO_MONTHLY}</span>
-                            <span className="text-xl font-light">${getDiscountedPrice(PRICING.PRO_MONTHLY)}</span>
-                          </div>
-                        ) : (
-                          <span className="text-xl font-light">${PRICING.PRO_MONTHLY}</span>
-                        )}
-                        <div className="text-xs text-muted-foreground">USD</div>
-                        <div className="text-xs">Monthly subscription</div>
-                        <div className="text-xs text-muted-foreground">💳 Card payment</div>
-                      </div>
-                    </div>
-                  </div>
+                // Show user's current pricing (DodoPayments only)
+                <div className="flex items-baseline">
+                  <span className="text-4xl font-light">₹{PRICING.PRO_MONTHLY_INR}</span>
+                  <span className="text-muted-foreground ml-2">+GST</span>
                 </div>
               ) : (
+                // Show Indian pricing options
                 <div className="flex items-baseline">
                   {shouldShowDiscount() ? (
                     <div className="flex items-baseline gap-3">
-                      <span className="text-xl text-muted-foreground line-through">$15</span>
-                      <span className="text-4xl font-light">${getDiscountedPrice(PRICING.PRO_MONTHLY)}</span>
+                      <span className="text-xl text-muted-foreground line-through">
+                        ₹{PRICING.PRO_MONTHLY_INR}
+                      </span>
+                      <span className="text-4xl font-light">
+                        ₹{getDiscountedPrice(PRICING.PRO_MONTHLY_INR, true)}
+                      </span>
                     </div>
                   ) : (
-                    <span className="text-4xl font-light">$15</span>
+                    <span className="text-4xl font-light">₹{PRICING.PRO_MONTHLY_INR}</span>
                   )}
-                  <span className="text-muted-foreground ml-2">/month</span>
+                  <span className="text-muted-foreground ml-2">+GST</span>
                 </div>
               )}
             </CardHeader>
@@ -444,62 +383,30 @@ export default function PricingTable({ subscriptionDetails, user }: PricingTable
               {hasProAccess() ? (
                 <div className="space-y-4">
                   <Button className="w-full" onClick={handleManageSubscription}>
-                    {getProAccessSource() === 'dodo' ? 'Manage payment' : 'Manage subscription'}
+                    Manage payment
                   </Button>
-                  {getProAccessSource() === 'polar' && subscriptionDetails.subscription && (
-                    <p className="text-sm text-muted-foreground text-center">
-                      {subscriptionDetails.subscription.cancelAtPeriodEnd
-                        ? `Subscription expires ${formatDate(subscriptionDetails.subscription.currentPeriodEnd)}`
-                        : `Renews ${formatDate(subscriptionDetails.subscription.currentPeriodEnd)}`}
-                    </p>
-                  )}
-                  {getProAccessSource() === 'dodo' && user?.dodoPayments?.expiresAt && (
+                  {user?.dodoPayments?.expiresAt && (
                     <p className="text-sm text-muted-foreground text-center">
                       Access expires {formatDate(new Date(user.dodoPayments.expiresAt))}
                     </p>
                   )}
                 </div>
-              ) : !location.loading && location.isIndia && !discountConfig.isStudentDiscount ? (
-                !user ? (
-                  <Button className="w-full group" onClick={() => handleCheckout(STARTER_TIER, STARTER_SLUG)}>
-                    Sign up for Pro
+              ) : (
+                <div className="space-y-3">
+                  <Button className="w-full group" onClick={handleCheckout}>
+                    {!user ? 'Sign up for Pro' : `Pay ₹${getDiscountedPrice(PRICING.PRO_MONTHLY_INR, true)} + GST`}
                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                ) : (
-                  <div className="space-y-3">
-                    <Button
-                      className="w-full group"
-                      onClick={() => handleCheckout(STARTER_TIER, STARTER_SLUG, 'dodo')}
-                    >
-                      Pay ₹{getDiscountedPrice(PRICING.PRO_MONTHLY_INR, true)} + GST
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                    <p className="text-xs text-muted-foreground text-center mt-2">
-                      Powered by Cashfree & DodoPayments
-                    </p>
-                    <Button
-                      className="w-full group"
-                      onClick={() => handleCheckout(STARTER_TIER, STARTER_SLUG, 'polar')}
-                    >
-                      Subscribe ${getDiscountedPrice(PRICING.PRO_MONTHLY)}/month
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                    {shouldShowDiscount() && discountConfig.discountAvail && (
-                      <p className="text-xs text-primary text-center font-medium">{discountConfig.discountAvail}</p>
-                    )}
-                  </div>
-                )
-              ) : (
-                <Button
-                  className="w-full group"
-                  onClick={() => handleCheckout(STARTER_TIER, STARTER_SLUG)}
-                  disabled={location.loading}
-                >
-                  {location.loading ? 'Loading...' : !user ? 'Sign up for Pro' : 'Upgrade to Pro'}
-                  {!location.loading && (
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  <p className="text-xs text-muted-foreground text-center">
+                    🇮🇳 UPI, Cards, Net Banking, Wallets
+                  </p>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Powered by Cashfree & DodoPayments
+                  </p>
+                  {shouldShowDiscount() && discountConfig.discountAvail && (
+                    <p className="text-xs text-primary text-center font-medium">{discountConfig.discountAvail}</p>
                   )}
-                </Button>
+                </div>
               )}
             </CardContent>
           </Card>
