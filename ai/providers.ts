@@ -40,11 +40,8 @@ const azure = createOpenAI({
 });
 
 const azureGpt4oMini = createOpenAI({
-  baseURL: 'https://kamesh6592-7068-resource.cognitiveservices.azure.com/openai/deployments/gpt-4o-mini',
+  baseURL: 'https://kamesh6592-7068-resource.cognitiveservices.azure.com/openai/deployments/gpt-4o-mini/chat/completions?api-version=2025-01-01-preview',
   apiKey: process.env.AZURE_API_KEY,
-  headers: {
-    'api-version': '2025-01-01-preview',
-  },
 });
 
 const zhipuai = createOpenAI({
@@ -98,9 +95,9 @@ export const scira = customProvider({
       : isValidApiKey(process.env.GROQ_API_KEY)
       ? groq('llama-3.3-70b-versatile')
       : xai('grok-4-latest'),
-    'scira-qwen-4b': isValidApiKey(process.env.GROQ_API_KEY) ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+    'scira-qwen-4b': huggingface.chat('Qwen/Qwen2.5-3B-Instruct'),
     'scira-qwen-4b-thinking': wrapLanguageModel({
-      model: isValidApiKey(process.env.GROQ_API_KEY) ? groq('llama-3.3-70b-versatile') : anthropic('claude-sonnet-4-20250514'),
+      model: huggingface.chat('Qwen/Qwen2.5-7B-Instruct'),
       middleware: [middlewareWithStartWithReasoning],
     }),
     'scira-gpt-4o-mini': azureGpt4oMini.chat('gpt-4o-mini'),
