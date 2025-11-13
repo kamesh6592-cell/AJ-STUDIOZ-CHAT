@@ -154,13 +154,43 @@ NEXT_PUBLIC_CASHFREE_PRODUCT_ID=aj_studioz_pro_1299
 3. Test payment flows in production
 4. Monitor webhook processing and error logs
 
+## Troubleshooting Common Issues
+
+### 🚨 "Checkout creation failed" Error
+
+**Cashfree Authentication Failed:**
+1. Check your Cashfree credentials in Vercel environment variables
+2. Ensure `CASHFREE_APP_ID` and `CASHFREE_SECRET_KEY` are correct
+3. Verify you're using sandbox keys for development, production keys for live
+
+**DodoPayments Product Not Found:**
+1. Create a product in your DodoPayments dashboard with slug `pro-plan-dodo`
+2. Ensure the product price matches ₹1299 + GST
+3. Verify the product is active and published
+
+### 🔍 Debug Your Configuration
+
+Visit `/api/debug/payment-config` on your site to check configuration status.
+
+### 📋 Checklist Before Going Live
+
+- [ ] Cashfree merchant account verified (KYC complete)
+- [ ] DodoPayments product created with correct slug
+- [ ] All environment variables set in Vercel
+- [ ] Webhook URLs configured in both dashboards
+- [ ] Test payments successful in sandbox mode
+- [ ] GST registration details added to invoicing
+
 ## Support
 
 The system automatically handles:
 - Payment processing and confirmations
 - Pro status activation/deactivation  
-- Subscription renewals and cancellations
 - Invoice generation and GST calculation
 - Customer portal access for subscription management
 
-For issues, check the webhook logs and ensure all environment variables are correctly set.
+**For issues:**
+1. Check `/api/debug/payment-config` endpoint first
+2. Verify webhook logs in your payment provider dashboards
+3. Ensure all environment variables are correctly set
+4. Test in sandbox mode before going live
