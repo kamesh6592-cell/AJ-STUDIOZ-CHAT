@@ -128,6 +128,29 @@ export default function CheckoutPage() {
   const onSubmit = async (data: CheckoutFormData) => {
     setIsLoading(true);
     try {
+      // Try Cashfree first, fallback to DodoPayments
+      try {
+        const cashfreeResponse = await fetch('/api/cashfree/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            customerPhone: '9999999999', // You can add phone field to form
+            returnUrl: `${window.location.origin}/success?provider=cashfree`,
+          }),
+        });
+
+        if (cashfreeResponse.ok) {
+          const cashfreeData = await cashfreeResponse.json();
+          // Redirect to Cashfree checkout
+          const checkoutUrl = `${process.env.NODE_ENV === 'production' ? 'https://checkout.cashfree.com' : 'https://sandbox.cashfree.com'}/pay?cftoken=${cashfreeData.cfToken}`;
+          window.location.href = checkoutUrl;
+          return;
+        }
+      } catch (cashfreeError) {
+        console.log('Cashfree unavailable, trying DodoPayments...');
+      }
+
+      // Fallback to DodoPayments
       const { data: checkout, error } = await betterauthClient.dodopayments.checkout({
         slug: process.env.NEXT_PUBLIC_PREMIUM_SLUG,
         customer: {
@@ -136,7 +159,7 @@ export default function CheckoutPage() {
         },
         billing: {
           city: data.billing.city,
-          country: 'IN', // Always India
+          country: 'IN',
           state: data.billing.state,
           street: data.billing.street,
           zipcode: data.billing.zipcode,
@@ -149,7 +172,6 @@ export default function CheckoutPage() {
       }
 
       if (checkout?.url) {
-        // Redirect to DodoPayments checkout
         window.location.href = checkout.url;
       } else {
         throw new Error('No checkout URL received');

@@ -474,6 +474,9 @@ export default function PricingTable({ subscriptionDetails, user }: PricingTable
                       Pay ₹{getDiscountedPrice(PRICING.PRO_MONTHLY_INR, true)} + GST
                       <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                     </Button>
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      Powered by Cashfree & DodoPayments
+                    </p>
                     <Button
                       className="w-full group"
                       onClick={() => handleCheckout(STARTER_TIER, STARTER_SLUG, 'polar')}

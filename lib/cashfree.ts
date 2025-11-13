@@ -1,0 +1,138 @@
+// Cashfree SDK utilities for payment processing
+import crypto from 'crypto';
+
+// Cashfree API configuration
+const CASHFREE_CONFIG = {
+  appId: process.env.CASHFREE_APP_ID!,
+  secretKey: process.env.CASHFREE_SECRET_KEY!,
+  baseUrl: process.env.NODE_ENV === 'production' 
+    ? 'https://api.cashfree.com/pg' 
+    : 'https://sandbox.cashfree.com/pg',
+  checkoutUrl: process.env.NODE_ENV === 'production'
+    ? 'https://checkout.cashfree.com'
+    : 'https://sandbox.cashfree.com',
+};
+
+export interface CashfreePaymentData {
+  orderId: string;
+  orderAmount: number;
+  orderCurrency: string;
+  customerDetails: {
+    customerId: string;
+    customerName: string;
+    customerEmail: string;
+    customerPhone: string;
+  };
+  orderMeta?: {
+    returnUrl: string;
+    notifyUrl: string;
+  };
+}
+
+export interface CashfreePaymentSession {
+  cfToken: string;
+  orderId: string;
+  paymentSessionId: string;
+}
+
+export class CashfreePaymentService {
+  private static getHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      'x-api-version': '2023-08-01',
+      'x-client-id': CASHFREE_CONFIG.appId,
+      'x-client-secret': CASHFREE_CONFIG.secretKey,
+    };
+  }
+
+  static async createPaymentOrder(paymentData: CashfreePaymentData): Promise<CashfreePaymentSession> {
+    try {
+      const orderRequest = {
+        order_id: paymentData.orderId,
+        order_amount: paymentData.orderAmount,
+        order_currency: paymentData.orderCurrency,
+        customer_details: {
+          customer_id: paymentData.customerDetails.customerId,
+          customer_name: paymentData.customerDetails.customerName,
+          customer_email: paymentData.customerDetails.customerEmail,
+          customer_phone: paymentData.customerDetails.customerPhone,
+        },
+        order_meta: paymentData.orderMeta || {
+          return_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?provider=cashfree`,
+          notify_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/cashfree`,
+        },
+      };
+
+      const response = await fetch(`${CASHFREE_CONFIG.baseUrl}/orders`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(orderRequest),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(`Cashfree API error: ${errorData.message || response.statusText}`);
+      }
+
+      const responseData = await response.json();
+      
+      if (responseData && responseData.cf_token) {
+        return {
+          cfToken: responseData.cf_token,
+          orderId: responseData.order_id,
+          paymentSessionId: responseData.payment_session_id,
+        };
+      } else {
+        throw new Error('Failed to create Cashfree payment session');
+      }
+    } catch (error) {
+      console.error('Cashfree order creation failed:', error);
+      throw error;
+    }
+  }
+
+  static async getOrderStatus(orderId: string) {
+    try {
+      const response = await fetch(`${CASHFREE_CONFIG.baseUrl}/orders/${orderId}/payments`, {
+        method: 'GET',
+        headers: this.getHeaders(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch order status: ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Failed to fetch Cashfree order status:', error);
+      throw error;
+    }
+  }
+
+  static async verifyWebhookSignature(
+    rawBody: string,
+    signature: string,
+    timestamp: string
+  ): Promise<boolean> {
+    try {
+      // Cashfree webhook signature verification
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.CASHFREE_WEBHOOK_SECRET!)
+        .update(timestamp + rawBody)
+        .digest('base64');
+      
+      return expectedSignature === signature;
+    } catch (error) {
+      console.error('Cashfree webhook verification failed:', error);
+      return false;
+    }
+  }
+
+  static generateOrderId(): string {
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    return `CF_ORDER_${timestamp}_${randomString}`;
+  }
+}
+
+export { CASHFREE_CONFIG };
