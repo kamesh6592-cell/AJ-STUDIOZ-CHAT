@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Shield, UserPlus, UserX, TestTube, CreditCard } from 'lucide-react';
+import Image from 'next/image';
 
 export default function AdminPage() {
   const [userEmail, setUserEmail] = useState('');
@@ -87,9 +88,20 @@ export default function AdminPage() {
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Shield className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold">AJ STUDIOZ Admin Panel</h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <div className="relative w-12 h-12 rounded-lg overflow-hidden shadow-lg ring-2 ring-blue-100 dark:ring-blue-800">
+              <Image 
+                src="/aj-logo.jpg" 
+                alt="AJ STUDIOZ Logo" 
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="w-8 h-8 text-blue-600" />
+              <h1 className="text-3xl font-bold">AJ STUDIOZ Admin Panel</h1>
+            </div>
           </div>
           <p className="text-muted-foreground">Manage premium access and test payment system</p>
         </div>

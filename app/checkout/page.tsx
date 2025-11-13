@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 
 import { ArrowLeft, CreditCard, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { toast } from 'sonner';
 import { betterauthClient } from '@/lib/auth-client';
 import { useRouter } from 'next/navigation';
@@ -259,12 +260,20 @@ export default function CheckoutPage() {
         <div className="text-center">
           {/* AJ STUDIOZ Logo */}
           <div className="flex items-center justify-center mb-6">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl p-3 shadow-lg">
-              <span className="text-2xl font-bold tracking-wider">AJ</span>
-            </div>
-            <div className="ml-3">
-              <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">AJ STUDIOZ</h2>
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">AI-Powered Research</p>
+            <div className="flex items-center gap-4">
+              <div className="relative w-16 h-16 rounded-xl overflow-hidden shadow-lg ring-2 ring-blue-100 dark:ring-blue-800">
+                <Image 
+                  src="/aj-logo.jpg" 
+                  alt="AJ STUDIOZ Logo" 
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">AJ STUDIOZ</h2>
+                <p className="text-base text-zinc-600 dark:text-zinc-400">AI-Powered Research</p>
+              </div>
             </div>
           </div>
           <h1 className="text-[2rem] font-medium tracking-tight text-zinc-900 dark:text-zinc-100 mb-4 leading-tight">
