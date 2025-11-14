@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
     
     const offset = (page - 1) * limit;
 
-    // Create base query
-    let query = db.select({
+    // Build query with optional search filter
+    const baseQuery = db.select({
       id: user.id,
       name: user.name,
       email: user.email,
@@ -34,21 +34,27 @@ export async function GET(request: NextRequest) {
       updatedAt: user.updatedAt,
     }).from(user);
 
-    // Add search filter if provided
-    if (search) {
-      query = query.where(
-        sql`lower(${user.name}) like ${`%${search.toLowerCase()}%`} OR lower(${user.email}) like ${`%${search.toLowerCase()}%`}`
-      );
-    }
+    // Execute query with pagination and optional search
+    const allUsers = search 
+      ? await baseQuery
+          .where(
+            sql`lower(${user.name}) like ${`%${search.toLowerCase()}%`} OR lower(${user.email}) like ${`%${search.toLowerCase()}%`}`
+          )
+          .orderBy(desc(user.createdAt))
+          .limit(limit)
+          .offset(offset)
+      : await baseQuery
+          .orderBy(desc(user.createdAt))
+          .limit(limit)
+          .offset(offset);
 
-    // Execute query with pagination
-    const allUsers = await query
-      .orderBy(desc(user.createdAt))
-      .limit(limit)
-      .offset(offset);
-
-    // Get total count for pagination
-    const totalCountResult = await db.select({ count: sql`count(*)` }).from(user);
+    // Get total count for pagination (with search filter if applicable)
+    const totalCountResult = search
+      ? await db.select({ count: sql`count(*)` }).from(user)
+          .where(
+            sql`lower(${user.name}) like ${`%${search.toLowerCase()}%`} OR lower(${user.email}) like ${`%${search.toLowerCase()}%`}`
+          )
+      : await db.select({ count: sql`count(*)` }).from(user);
     const totalUsers = Number(totalCountResult[0]?.count || 0);
 
     // Get comprehensive data for each user (includes Pro status)

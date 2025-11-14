@@ -40,8 +40,33 @@ This document provides a comprehensive overview of all API keys, environment var
 
 ## 🤖 AI & Language Models
 
+### Current AI/LLM Providers in AJ STUDIOZ:
+
+**🎯 Default Model**: Gemini 2.5 Flash (Google)
+
+**Free Tier Models:**
+- Qwen 3 4B (Alibaba) - Basic reasoning
+- GPT-4o Mini (OpenAI via Azure) - Vision support
+- GLM 4.5 Flash (Zhipu AI) - Fast inference
+- Grok 4 Fast (xAI via Azure) - Free tier with reasoning
+- GPT-5 Mini (OpenAI via Azure) - Free tier with vision
+- DeepSeek V3.1 (via Azure) - Free reasoning model
+
+**Pro Tier Models:**
+- **Grok Series**: Grok 3 Mini, Grok 3, Grok 4, Grok 4 Fast Thinking
+- **GPT Series**: GPT-4.1, GPT-5, GPT-5 Mini, GPT-5 Medium, O3, O4 Mini
+- **DeepSeek**: R1, R1 Thinking (Azure) - Advanced reasoning
+- **Mistral**: Medium, Magistral Small/Medium - Multimodal
+- **Qwen**: 3 Max, 3 Max Preview - Advanced instruct
+- **GLM**: 4.5, 4.6 Air - Long context
+- **Cohere**: Command A, Command A Thinking
+- **Specialized**: Grok Code, GPT-5 Codex (coding focus)
+
+**Vision Support**: GPT models, Grok 4, Mistral models, Gemini
+**Reasoning Support**: Most Pro models, DeepSeek, Grok series
+**PDF Support**: Pro models with vision capabilities
+
 | Key | Purpose | Required | Where to Get |
-|-----|---------|----------|--------------|
 | `XAI_API_KEY` | Grok AI model access | ⚠️ Optional | [xAI Console](https://console.x.ai/) |
 | `OPENAI_API_KEY` | GPT models (GPT-4, GPT-3.5) | ⚠️ Optional | [OpenAI Platform](https://platform.openai.com/api-keys) |
 | `ANTHROPIC_API_KEY` | Claude models access | ⚠️ Optional | [Anthropic Console](https://console.anthropic.com/) |

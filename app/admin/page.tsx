@@ -12,9 +12,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { 
+import {
   Shield, Users, UserPlus, UserX, CreditCard, TestTube, Crown, UserMinus,
-  Search, ChevronLeft, ChevronRight, Mail 
+  Search, ChevronLeft, ChevronRight, Mail, Loader2
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -27,7 +27,7 @@ interface User {
   emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
-  isProUser: boolean;
+  isPro: boolean;
   proSource?: string;
   proExpiresAt?: string;
   lastSignIn: string;
@@ -45,7 +45,10 @@ interface UsersPagination {
 export default function AdminPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
-  
+
+  // Tab state
+  const [activeTab, setActiveTab] = useState('users');
+
   // User management state
   const [users, setUsers] = useState<User[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -58,7 +61,7 @@ export default function AdminPage() {
     hasPrev: false,
   });
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Manual access state
   const [userEmail, setUserEmail] = useState('');
   const [reason, setReason] = useState('');
@@ -76,10 +79,10 @@ export default function AdminPage() {
 
   // Fetch users when tab changes
   useEffect(() => {
-    if (activeTab === 'users') {
+    if (activeTab === 'users' && session?.user.email === 'kamesh6592@gmail.com') {
       fetchUsers(1, '');
     }
-  }, [activeTab]);
+  }, [activeTab, session]);
 
   // Fetch users function
   const fetchUsers = async (page = 1, search = '') => {
@@ -90,10 +93,10 @@ export default function AdminPage() {
         limit: '20',
         ...(search && { search }),
       });
-      
+
       const response = await fetch(`/api/admin/users?${params}`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setUsers(data.users);
         setPagination(data.pagination);
@@ -148,12 +151,9 @@ export default function AdminPage() {
           <p className="text-muted-foreground mb-4">
             This admin panel is restricted to authorized personnel only.
           </p>
-          <button 
-            onClick={() => router.push('/sign-in?redirect=/admin')}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-          >
+          <Button onClick={() => router.push('/sign-in?redirect=/admin')}>
             Sign In
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -161,7 +161,7 @@ export default function AdminPage() {
 
   const handlePremiumAction = async (action: 'grant' | 'revoke', email?: string) => {
     const targetEmail = email || userEmail.trim();
-    
+
     if (!targetEmail) {
       toast.error('Please enter user email');
       return;
@@ -201,7 +201,7 @@ export default function AdminPage() {
     setTestLoading(true);
     try {
       toast.loading('Creating ₹2 test payment...', { id: 'test-payment' });
-      
+
       const response = await fetch('/api/cashfree/test-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -214,7 +214,7 @@ export default function AdminPage() {
       if (response.ok) {
         const data = await response.json();
         toast.success('Redirecting to ₹2 test payment...', { id: 'test-payment' });
-        
+
         // Use the payment session ID or cf_token for checkout URL
         const sessionId = data.paymentSessionId || data.cfToken;
         const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('vercel.app');
@@ -241,7 +241,7 @@ export default function AdminPage() {
     setEmailLoading(true);
     try {
       toast.loading('Sending test email notifications...', { id: 'test-email' });
-      
+
       const response = await fetch('/api/admin/test-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -272,9 +272,9 @@ export default function AdminPage() {
         <div className="text-center">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="relative w-12 h-12 rounded-lg overflow-hidden shadow-lg ring-2 ring-blue-100 dark:ring-blue-800">
-              <Image 
-                src="/aj-logo.jpg" 
-                alt="AJ STUDIOZ Logo" 
+              <Image
+                src="/aj-logo.jpg"
+                alt="AJ STUDIOZ Logo"
                 fill
                 className="object-cover"
                 priority
@@ -331,10 +331,10 @@ export default function AdminPage() {
                   </div>
                   <Button
                     onClick={() => fetchUsers(1, searchQuery)}
-                    disabled={isLoading}
+                    disabled={usersLoading}
                     variant="outline"
                   >
-                    {isLoading ? (
+                    {usersLoading ? (
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <Search className="w-4 h-4" />
@@ -344,7 +344,7 @@ export default function AdminPage() {
                 </div>
 
                 {/* Users Table */}
-                {usersList.length > 0 ? (
+                {users.length > 0 ? (
                   <div className="space-y-4">
                     <div className="border rounded-lg">
                       <Table>
@@ -357,7 +357,7 @@ export default function AdminPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {usersList.map((user) => (
+                          {users.map((user) => (
                             <TableRow key={user.id}>
                               <TableCell>
                                 <div className="flex items-center gap-3">
@@ -443,7 +443,7 @@ export default function AdminPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => fetchUsers(pagination.page - 1, searchQuery)}
-                          disabled={pagination.page <= 1 || isLoading}
+                          disabled={pagination.page <= 1 || usersLoading}
                         >
                           <ChevronLeft className="w-4 h-4" />
                           Previous
@@ -458,7 +458,7 @@ export default function AdminPage() {
                                 variant={pageNum === pagination.page ? "default" : "outline"}
                                 size="sm"
                                 onClick={() => fetchUsers(pageNum, searchQuery)}
-                                disabled={isLoading}
+                                disabled={usersLoading}
                                 className="w-8 h-8 p-0"
                               >
                                 {pageNum}
@@ -470,7 +470,7 @@ export default function AdminPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => fetchUsers(pagination.page + 1, searchQuery)}
-                          disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit) || isLoading}
+                          disabled={pagination.page >= Math.ceil(pagination.total / pagination.limit) || usersLoading}
                         >
                           Next
                           <ChevronRight className="w-4 h-4" />
@@ -480,7 +480,7 @@ export default function AdminPage() {
                   </div>
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
-                    {isLoading ? (
+                    {usersLoading ? (
                       <div className="flex items-center justify-center gap-2">
                         <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
                         Loading users...
@@ -519,7 +519,7 @@ export default function AdminPage() {
                     onChange={(e) => setUserEmail(e.target.value)}
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="reason">Reason (Optional)</Label>
                   <Textarea
@@ -540,7 +540,7 @@ export default function AdminPage() {
                     <UserPlus className="w-4 h-4 mr-2" />
                     Grant Access
                   </Button>
-                  
+
                   <Button
                     onClick={() => handlePremiumAction('revoke')}
                     disabled={isLoading}
@@ -587,7 +587,7 @@ export default function AdminPage() {
                     <li>• Success/failure handling</li>
                     <li>• Webhook processing</li>
                   </ul>
-                  
+
                   <Button
                     onClick={handleTestPayment}
                     disabled={testLoading}
@@ -674,66 +674,25 @@ export default function AdminPage() {
                   Check System Health
                 </a>
               </Button>
-              
-              <Button variant="outline" asChild>
-                <a href="/api/test-payment-config" target="_blank">
-                  Payment Config Status
-                </a>
-              </Button>
-              
-              <Button variant="outline" asChild>
-                <a href="/api/debug/cashfree-test" target="_blank">
-                  Test Cashfree API
-                </a>
-              </Button>
-              
-              <Button variant="outline" asChild>
-                <a href="/pricing" target="_blank">
-                  View Pricing Page
-                </a>
-              </Button>
-              
-              <Button variant="outline" asChild>
-                <a href="/checkout" target="_blank">
-                  Test Checkout Flow
-                </a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Button variant="outline" asChild>
-                <a href="/api/health" target="_blank">
-                  Check System Health
-                </a>
-              </Button>
-              
               <Button variant="outline" asChild>
                 <a href="/api/test-payment-config" target="_blank">
                   Payment Config Status
                 </a>
               </Button>
-              
+
               <Button variant="outline" asChild>
                 <a href="/api/debug/cashfree-test" target="_blank">
                   Test Cashfree API
                 </a>
               </Button>
-              
+
               <Button variant="outline" asChild>
                 <a href="/pricing" target="_blank">
                   View Pricing Page
                 </a>
               </Button>
-              
+
               <Button variant="outline" asChild>
                 <a href="/checkout" target="_blank">
                   Test Checkout Flow
@@ -745,5 +704,4 @@ export default function AdminPage() {
       </div>
     </div>
   );
-}
 }

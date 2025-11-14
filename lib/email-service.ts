@@ -1,6 +1,18 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialize Resend to avoid build-time errors
+let resend: Resend | null = null;
+
+function getResendClient(): Resend {
+  if (!resend) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error('RESEND_API_KEY is not configured');
+    }
+    resend = new Resend(apiKey);
+  }
+  return resend;
+}
 
 interface OrderDetails {
   orderId: string;
@@ -16,8 +28,10 @@ interface OrderDetails {
 export class EmailService {
   static async sendOrderConfirmation(orderDetails: OrderDetails) {
     try {
+      const client = getResendClient();
+      
       // Send confirmation to customer
-      const customerEmail = await resend.emails.send({
+      const customerEmail = await client.emails.send({
         from: 'AJ STUDIOZ <noreply@ajstudioz.com>',
         to: [orderDetails.customerEmail],
         subject: `Payment Confirmation - Order #${orderDetails.orderId}`,
@@ -25,7 +39,7 @@ export class EmailService {
       });
 
       // Send notification to admin
-      const adminEmail = await resend.emails.send({
+      const adminEmail = await client.emails.send({
         from: 'AJ STUDIOZ <noreply@ajstudioz.com>',
         to: ['kamesh6592@gmail.com'],
         subject: `New Order Alert - ₹${orderDetails.amount} Payment Received`,

@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { ExternalLink } from 'lucide-react';
-import { SciraLogo } from '@/components/logos/scira-logo';
 
 const container = {
   hidden: { opacity: 0 },
@@ -39,8 +39,15 @@ export default function PrivacyPage() {
             {/* Logo */}
             <motion.div variants={item} className="text-center">
               <Link href="/" className="inline-flex items-center gap-3 font-be-vietnam-pro font-bold">
-                <div className="relative w-14 h-14 rounded-full bg-background/90 shadow-sm flex items-center justify-center border">
-                  <SciraLogo className="size-8 opacity-90" />
+                <div className="relative w-14 h-14 rounded-full bg-background/90 shadow-sm flex items-center justify-center border overflow-hidden">
+                  <Image 
+                    src="/aj-logo.jpg" 
+                    alt="AJ STUDIOZ Logo" 
+                    width={32}
+                    height={32}
+                    className="opacity-90"
+                    priority
+                  />
                 </div>
               </Link>
             </motion.div>
@@ -195,8 +202,14 @@ export default function PrivacyPage() {
         <div className="container max-w-3xl mx-auto px-4 pt-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-background border flex items-center justify-center">
-                <SciraLogo className="size-4 opacity-80" />
+              <div className="w-8 h-8 rounded-full bg-background border flex items-center justify-center overflow-hidden">
+                <Image 
+                  src="/aj-logo.jpg" 
+                  alt="AJ STUDIOZ Logo" 
+                  width={16}
+                  height={16}
+                  className="opacity-80"
+                />
               </div>
               <div className="text-sm text-muted-foreground">
                 © {new Date().getFullYear()} AJ STUDIOZ
