@@ -3,7 +3,7 @@ import { getComprehensiveUserData } from '@/lib/user-data-server';
 import { db } from '@/lib/db';
 import { user, adminGrant } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
-import { generateId } from 'lucia';
+import { generateId } from 'ai';
 
 export async function POST(request: NextRequest) {
   try {
