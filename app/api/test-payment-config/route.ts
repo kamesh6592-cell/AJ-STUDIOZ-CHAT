@@ -1,60 +1,70 @@
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  // Test Cashfree configuration
-  const cashfreeTest = {
-    hasAppId: !!process.env.CASHFREE_APP_ID,
-    hasSecretKey: !!process.env.CASHFREE_SECRET_KEY,
-    appIdValue: process.env.CASHFREE_APP_ID ? `${process.env.CASHFREE_APP_ID.slice(0, 8)}...` : 'NOT_SET',
-    secretKeyValue: process.env.CASHFREE_SECRET_KEY ? `${process.env.CASHFREE_SECRET_KEY.slice(0, 8)}...` : 'NOT_SET',
-    baseUrl: process.env.NODE_ENV === 'production' 
-      ? 'https://api.cashfree.com/pg' 
-      : 'https://sandbox.cashfree.com/pg',
-    environment: process.env.NODE_ENV
-  };
+  const isDevelopment = process.env.NODE_ENV !== 'production';
 
   // Test DodoPayments configuration
   const dodoTest = {
-    hasApiKey: !!process.env.DODO_PAYMENTS_API_KEY,
-    apiKeyValue: process.env.DODO_PAYMENTS_API_KEY ? `${process.env.DODO_PAYMENTS_API_KEY.slice(0, 8)}...` : 'NOT_SET',
-    productSlug: process.env.NEXT_PUBLIC_PREMIUM_SLUG || 'NOT_SET'
+    production: {
+      hasApiKey: !!process.env.DODO_PAYMENTS_API_KEY,
+      apiKeyValue: process.env.DODO_PAYMENTS_API_KEY ? `${process.env.DODO_PAYMENTS_API_KEY.slice(0, 8)}...` : 'NOT_SET',
+      hasWebhookSecret: !!process.env.DODO_PAYMENTS_WEBHOOK_SECRET,
+    },
+    test: {
+      hasApiKey: !!process.env.DODO_PAYMENTS_TEST_API_KEY,
+      apiKeyValue: process.env.DODO_PAYMENTS_TEST_API_KEY ? `${process.env.DODO_PAYMENTS_TEST_API_KEY.slice(0, 8)}...` : 'NOT_SET',
+      hasWebhookSecret: !!process.env.DODO_PAYMENTS_TEST_WEBHOOK_SECRET,
+    },
+    activeMode: isDevelopment ? 'test' : 'production',
+    productSlug: process.env.NEXT_PUBLIC_PREMIUM_SLUG || process.env.NEXT_PUBLIC_TEST_PREMIUM_SLUG || 'NOT_SET',
+    productId: process.env.NEXT_PUBLIC_PREMIUM_TIER || process.env.NEXT_PUBLIC_TEST_PRODUCT_ID || 'NOT_SET',
+    environment: process.env.NODE_ENV
   };
 
   // Overall status
+  const activeConfig = isDevelopment ? dodoTest.test : dodoTest.production;
   const overallStatus = {
-    cashfreeReady: cashfreeTest.hasAppId && cashfreeTest.hasSecretKey,
-    dodoReady: dodoTest.hasApiKey && !!process.env.NEXT_PUBLIC_PREMIUM_SLUG,
-    anyProviderReady: (cashfreeTest.hasAppId && cashfreeTest.hasSecretKey) || (dodoTest.hasApiKey && !!process.env.NEXT_PUBLIC_PREMIUM_SLUG)
+    dodoReady: activeConfig.hasApiKey && !!dodoTest.productSlug,
+    mode: isDevelopment ? 'test (safe for development)' : 'production (real payments)',
   };
 
   // Instructions based on current state
   const instructions = [];
 
-  if (!cashfreeTest.hasAppId) {
-    instructions.push('1. Set CASHFREE_APP_ID in Vercel environment variables');
+  if (isDevelopment) {
+    if (!dodoTest.test.hasApiKey && !dodoTest.production.hasApiKey) {
+      instructions.push('1. Set DODO_PAYMENTS_TEST_API_KEY in .env.local (from DodoPayments Test Mode)');
+    }
+    if (!process.env.NEXT_PUBLIC_TEST_PRODUCT_ID && !process.env.NEXT_PUBLIC_PREMIUM_TIER) {
+      instructions.push('2. Set NEXT_PUBLIC_TEST_PRODUCT_ID in .env.local');
+    }
+    if (!process.env.NEXT_PUBLIC_TEST_PREMIUM_SLUG && !process.env.NEXT_PUBLIC_PREMIUM_SLUG) {
+      instructions.push('3. Set NEXT_PUBLIC_TEST_PREMIUM_SLUG=starter in .env.local');
+    }
+  } else {
+    if (!dodoTest.production.hasApiKey) {
+      instructions.push('1. Set DODO_PAYMENTS_API_KEY in Vercel environment variables (from DodoPayments Live Mode)');
+    }
+    if (!process.env.NEXT_PUBLIC_PREMIUM_TIER) {
+      instructions.push('2. Set NEXT_PUBLIC_PREMIUM_TIER in Vercel environment variables');
+    }
+    if (!process.env.NEXT_PUBLIC_PREMIUM_SLUG) {
+      instructions.push('3. Set NEXT_PUBLIC_PREMIUM_SLUG=pro-plan-dodo in Vercel environment variables');
+    }
   }
-  if (!cashfreeTest.hasSecretKey) {
-    instructions.push('2. Set CASHFREE_SECRET_KEY in Vercel environment variables');
-  }
-  if (!dodoTest.hasApiKey) {
-    instructions.push('3. Set DODO_PAYMENTS_API_KEY in Vercel environment variables');
-  }
-  if (!process.env.NEXT_PUBLIC_PREMIUM_SLUG) {
-    instructions.push('4. Set NEXT_PUBLIC_PREMIUM_SLUG=pro-plan-dodo in Vercel environment variables');
-  }
-  if (dodoTest.hasApiKey && process.env.NEXT_PUBLIC_PREMIUM_SLUG) {
-    instructions.push('5. Create a product in DodoPayments dashboard with slug "pro-plan-dodo" and price ₹1299');
+
+  if (activeConfig.hasApiKey && dodoTest.productSlug !== 'NOT_SET') {
+    instructions.push(`4. Verify product exists in DodoPayments dashboard (${isDevelopment ? 'Test' : 'Live'} Mode) with slug "${dodoTest.productSlug}"`);
   }
 
   return NextResponse.json({
-    status: overallStatus.anyProviderReady ? 'PARTIAL_READY' : 'NOT_READY',
-    cashfree: cashfreeTest,
+    status: overallStatus.dodoReady ? 'READY' : 'NOT_READY',
     dodoPayments: dodoTest,
     overall: overallStatus,
     nextSteps: instructions,
     timestamp: new Date().toISOString(),
-    message: overallStatus.anyProviderReady 
-      ? 'Some payment providers are configured, but may have issues'
-      : 'Payment system needs configuration'
+    message: overallStatus.dodoReady 
+      ? `DodoPayments is configured and ready (${overallStatus.mode})`
+      : 'DodoPayments needs configuration'
   });
 }

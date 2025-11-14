@@ -92,26 +92,17 @@ This document provides a comprehensive overview of all API keys, environment var
 
 ---
 
-## 💳 Payment Providers
+## 💳 Payment Provider
 
-### Cashfree (Primary - Indian Payments)
+### DodoPayments (Primary - Production & Test Mode)
 | Key | Purpose | Required | Where to Get |
 |-----|---------|----------|--------------|
-| `CASHFREE_APP_ID` | Cashfree application ID | ✅ **Critical** | [Cashfree Dashboard](https://merchant.cashfree.com/) → API Keys |
-| `CASHFREE_SECRET_KEY` | Cashfree secret key | ✅ **Critical** | [Cashfree Dashboard](https://merchant.cashfree.com/) → API Keys |
-| `CASHFREE_WEBHOOK_SECRET` | Webhook signature verification | ✅ **Critical** | [Cashfree Dashboard](https://merchant.cashfree.com/) → Webhooks |
+| `DODO_PAYMENTS_API_KEY` | Production API access | ✅ **Critical** | [DodoPayments Dashboard](https://dodopayments.com/) → Live Mode → API Keys |
+| `DODO_PAYMENTS_WEBHOOK_SECRET` | Production webhook verification | ✅ **Critical** | [DodoPayments Dashboard](https://dodopayments.com/) → Live Mode → Webhooks |
+| `DODO_PAYMENTS_TEST_API_KEY` | Test mode API access | ⚠️ Dev Only | [DodoPayments Dashboard](https://dodopayments.com/) → Test Mode → API Keys |
+| `DODO_PAYMENTS_TEST_WEBHOOK_SECRET` | Test webhook verification | ⚠️ Dev Only | [DodoPayments Dashboard](https://dodopayments.com/) → Test Mode → Webhooks |
 
-### DodoPayments (Fallback - Indian Payments)
-| Key | Purpose | Required | Where to Get |
-|-----|---------|----------|--------------|
-| `DODO_PAYMENTS_API_KEY` | DodoPayments API access | ✅ **Critical** | [DodoPayments Dashboard](https://dodopayments.com/) → API Keys |
-| `DODO_PAYMENTS_WEBHOOK_SECRET` | Webhook signature verification | ✅ **Critical** | [DodoPayments Dashboard](https://dodopayments.com/) → Webhooks |
-
-### Polar (Deprecated - Removed)
-| Key | Purpose | Required | Where to Get |
-|-----|---------|----------|--------------|
-| `POLAR_ACCESS_TOKEN` | ❌ **Removed** | ❌ No | Previously Polar.sh |
-| `POLAR_WEBHOOK_SECRET` | ❌ **Removed** | ❌ No | Previously Polar.sh |
+**Note**: System automatically uses test keys in development and production keys in production.
 
 ---
 
@@ -227,19 +218,23 @@ DATABASE_URL=postgresql://...
 BETTER_AUTH_SECRET=your_32_character_random_string
 BETTER_AUTH_URL=https://yourdomain.com
 
-# Payment System
-CASHFREE_APP_ID=your_cashfree_app_id
-CASHFREE_SECRET_KEY=your_cashfree_secret_key
-DODO_PAYMENTS_API_KEY=your_dodo_payments_key
+# Payment System (Production)
+DODO_PAYMENTS_API_KEY=your_dodo_payments_live_key
+DODO_PAYMENTS_WEBHOOK_SECRET=your_webhook_secret
+
+# Payment System (Test - Development Only)
+DODO_PAYMENTS_TEST_API_KEY=your_dodo_test_key
+DODO_PAYMENTS_TEST_WEBHOOK_SECRET=your_test_webhook_secret
 
 # Email Notifications
 RESEND_API_KEY=your_resend_api_key
 
 # Public Configuration
 NEXT_PUBLIC_APP_URL=https://yourdomain.com
-NEXT_PUBLIC_PREMIUM_TIER=aj_studioz_pro_dodo
+NEXT_PUBLIC_PREMIUM_TIER=pdt_your_product_id
 NEXT_PUBLIC_PREMIUM_SLUG=pro-plan-dodo
-NEXT_PUBLIC_CASHFREE_PRODUCT_ID=aj_studioz_pro_1299
+NEXT_PUBLIC_TEST_PRODUCT_ID=pdt_test_product_id
+NEXT_PUBLIC_TEST_PREMIUM_SLUG=starter
 ```
 
 ### 2. Important (Enhanced Features)

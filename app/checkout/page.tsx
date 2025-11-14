@@ -128,91 +128,48 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: CheckoutFormData) => {
     setIsLoading(true);
-    let lastError = null;
     
     try {
-      // Try Cashfree first
-      try {
-        toast.loading('Creating secure payment session...', { id: 'checkout' });
-        
-        const cashfreeResponse = await fetch('/api/cashfree/checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            customerPhone: '9999999999', // You can add phone field to form
-            returnUrl: `${window.location.origin}/success?provider=cashfree`,
-          }),
-        });
+      toast.loading('Creating secure payment session...', { id: 'checkout' });
+      
+      const { data: checkout, error } = await betterauthClient.dodopayments.checkout({
+        slug: process.env.NEXT_PUBLIC_PREMIUM_SLUG || 'pro-plan-dodo',
+        customer: {
+          email: data.customer.email,
+          name: data.customer.name,
+        },
+        billing: {
+          city: data.billing.city,
+          country: 'IN',
+          state: data.billing.state,
+          street: data.billing.street,
+          zipcode: data.billing.zipcode,
+        },
+        referenceId: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      });
 
-        if (cashfreeResponse.ok) {
-          const cashfreeData = await cashfreeResponse.json();
-          toast.success('Redirecting to payment gateway...', { id: 'checkout' });
-          
-          // Redirect to Cashfree checkout
-          const checkoutUrl = `${process.env.NODE_ENV === 'production' ? 'https://checkout.cashfree.com' : 'https://sandbox.cashfree.com'}/pay/${cashfreeData.cfToken}`;
-          console.log('Redirecting to Cashfree checkout:', checkoutUrl);
-          window.location.href = checkoutUrl;
-          return;
-        } else {
-          const errorData = await cashfreeResponse.json().catch(() => ({}));
-          lastError = new Error(`Cashfree: ${errorData.error || 'Service unavailable'}`);
-        }
-      } catch (cashfreeError) {
-        lastError = cashfreeError as Error;
-        console.log('Cashfree unavailable, trying DodoPayments...', cashfreeError);
+      if (error) {
+        throw new Error(`Payment Error: ${error.message || 'Product not found in dashboard'}`);
       }
 
-      // Fallback to DodoPayments
-      try {
-        toast.loading('Trying alternative payment method...', { id: 'checkout' });
-        
-        const { data: checkout, error } = await betterauthClient.dodopayments.checkout({
-          slug: process.env.NEXT_PUBLIC_PREMIUM_SLUG || 'pro-plan-dodo',
-          customer: {
-            email: data.customer.email,
-            name: data.customer.name,
-          },
-          billing: {
-            city: data.billing.city,
-            country: 'IN',
-            state: data.billing.state,
-            street: data.billing.street,
-            zipcode: data.billing.zipcode,
-          },
-          referenceId: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        });
-
-        if (error) {
-          throw new Error(`DodoPayments: ${error.message || 'Product not found in dashboard'}`);
-        }
-
-        if (checkout?.url) {
-          toast.success('Redirecting to payment gateway...', { id: 'checkout' });
-          window.location.href = checkout.url;
-          return;
-        } else {
-          throw new Error('DodoPayments: No checkout URL received');
-        }
-      } catch (dodoError) {
-        // Both payment providers failed
-        console.error('Both payment providers failed:', { lastError, dodoError });
-        
-        toast.dismiss('checkout');
-        
-        // Show specific error message
-        if (dodoError instanceof Error && dodoError.message.includes('Product not found')) {
-          toast.error('Payment configuration error: Product not set up in dashboard. Please contact support.');
-        } else if (lastError && lastError.message.includes('authentication')) {
-          toast.error('Payment service configuration error. Please contact support.');
-        } else {
-          toast.error('Payment services are temporarily unavailable. Please try again later or contact support.');
-        }
-        
-        throw new Error('All payment providers failed');
+      if (checkout?.url) {
+        toast.success('Redirecting to payment gateway...', { id: 'checkout' });
+        window.location.href = checkout.url;
+        return;
+      } else {
+        throw new Error('No checkout URL received');
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      // Error already handled above with specific messages
+      
+      toast.dismiss('checkout');
+      
+      // Show specific error message
+      if (error instanceof Error && error.message.includes('Product not found')) {
+        toast.error('Payment configuration error: Product not set up in dashboard. Please contact support.');
+      } else {
+        toast.error('Payment service is temporarily unavailable. Please try again later or contact support.');
+      }
     } finally {
       setIsLoading(false);
     }

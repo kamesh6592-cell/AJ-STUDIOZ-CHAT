@@ -12,16 +12,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For test payments, just redirect to the main checkout page
-    // DodoPayments will handle the ₹1299 payment
-    // Admin can test the full payment flow
-    const checkoutUrl = `${process.env.NEXT_PUBLIC_APP_URL}/checkout`;
+    // Use test product in development, main product in production
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    const testProductSlug = process.env.NEXT_PUBLIC_TEST_PREMIUM_SLUG || 'starter';
+    const productionSlug = process.env.NEXT_PUBLIC_PREMIUM_SLUG || 'pro-plan-dodo';
+    
+    const checkoutSlug = isDevelopment ? testProductSlug : productionSlug;
+
+    // Create checkout URL with the appropriate product
+    const checkoutUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/dodopayments/checkout?slug=${checkoutSlug}`;
 
     return NextResponse.json({
       success: true,
       checkoutUrl,
-      message: 'Test DodoPayments checkout - Use your main product (₹1299)',
-      note: 'This will use your configured DodoPayments product. For ₹2 test, you need to create a separate test product in DodoPayments dashboard with slug "test-product"',
+      message: isDevelopment 
+        ? `Test checkout with ${testProductSlug} product` 
+        : `Production checkout with ${productionSlug} product`,
+      mode: isDevelopment ? 'test' : 'production',
+      productSlug: checkoutSlug,
       provider: 'dodopayments',
     });
   } catch (error) {
