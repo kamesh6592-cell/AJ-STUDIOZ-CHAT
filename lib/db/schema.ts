@@ -205,6 +205,24 @@ export const payment = pgTable('payment', {
   userId: text('user_id').references(() => user.id),
 });
 
+// Admin grants table for manual Pro access
+export const adminGrant = pgTable('admin_grant', {
+  id: text('id')
+    .primaryKey()
+    .$defaultFn(() => generateId()),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  grantedBy: text('granted_by').notNull(), // Admin email
+  grantedAt: timestamp('granted_at').notNull().defaultNow(),
+  expiresAt: timestamp('expires_at'), // null = permanent
+  reason: text('reason'),
+  status: text('status').notNull().default('active'), // 'active' or 'revoked'
+  revokedAt: timestamp('revoked_at'),
+  revokedBy: text('revoked_by'),
+  revokeReason: text('revoke_reason'),
+});
+
 // Lookout table for scheduled searches
 export const lookout = pgTable('lookout', {
   id: text('id')
@@ -254,3 +272,4 @@ export type ExtremeSearchUsage = InferSelectModel<typeof extremeSearchUsage>;
 export type MessageUsage = InferSelectModel<typeof messageUsage>;
 export type CustomInstructions = InferSelectModel<typeof customInstructions>;
 export type Lookout = InferSelectModel<typeof lookout>;
+export type AdminGrant = InferSelectModel<typeof adminGrant>;

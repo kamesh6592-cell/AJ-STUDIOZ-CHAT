@@ -202,12 +202,11 @@ export default function AdminPage() {
     try {
       toast.loading('Creating ₹2 test payment...', { id: 'test-payment' });
 
-      const response = await fetch('/api/cashfree/test-checkout', {
+      const response = await fetch('/api/dodopayments/test-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customerPhone: '9999999999',
-          returnUrl: `${window.location.origin}/success?provider=cashfree&test=true`,
+          returnUrl: `${window.location.origin}/success?provider=dodo&test=true`,
         }),
       });
 
@@ -215,10 +214,8 @@ export default function AdminPage() {
         const data = await response.json();
         toast.success('Redirecting to ₹2 test payment...', { id: 'test-payment' });
 
-        // Use the payment session ID or cf_token for checkout URL
-        const sessionId = data.paymentSessionId || data.cfToken;
-        const isProduction = window.location.hostname !== 'localhost' && !window.location.hostname.includes('vercel.app');
-        const checkoutUrl = `${isProduction ? 'https://checkout.cashfree.com' : 'https://sandbox.cashfree.com'}/pay/session/${sessionId}`;
+        // DodoPayments returns a direct checkout URL
+        const checkoutUrl = data.checkoutUrl;
         console.log('Test payment redirect URL:', checkoutUrl);
         window.location.href = checkoutUrl;
       } else {

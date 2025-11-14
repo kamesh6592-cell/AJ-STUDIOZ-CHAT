@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { eq, and, desc } from 'drizzle-orm';
-import { subscription, payment, user } from './db/schema';
+import { subscription, payment, user, adminGrant } from './db/schema';
 import { db } from './db';
 import { auth } from './auth';
 import { headers } from 'next/headers';
@@ -22,7 +22,7 @@ export type ComprehensiveUserData = {
   createdAt: Date;
   updatedAt: Date;
   isProUser: boolean;
-  proSource: 'polar' | 'dodo' | 'none';
+  proSource: 'polar' | 'dodo' | 'admin' | 'none';
   subscriptionStatus: 'active' | 'canceled' | 'expired' | 'none';
   polarSubscription?: {
     id: string;
@@ -231,10 +231,27 @@ export async function getLightweightUserAuth(): Promise<LightweightUserAuth | nu
       }
     }
 
+    // Check for active admin grants
+    let hasAdminGrant = false;
+    const activeGrants = await db
+      .select()
+      .from(adminGrant)
+      .where(and(eq(adminGrant.userId, userId), eq(adminGrant.status, 'active')))
+      .limit(1)
+      .$withCache();
+
+    if (activeGrants.length > 0) {
+      const grant = activeGrants[0];
+      // Check if grant hasn't expired (if expiresAt is set)
+      if (!grant.expiresAt || new Date(grant.expiresAt) > new Date()) {
+        hasAdminGrant = true;
+      }
+    }
+
     const lightweightData: LightweightUserAuth = {
       userId: result[0].userId,
       email: result[0].email,
-      isProUser: hasActivePolarSub || isDodoActive,
+      isProUser: hasActivePolarSub || isDodoActive || hasAdminGrant,
     };
 
     // Cache the result
@@ -346,9 +363,26 @@ export async function getComprehensiveUserData(): Promise<ComprehensiveUserData 
       isDodoActive = subscriptionEndDate > new Date();
     }
 
+    // Check for active admin grants
+    let hasAdminGrant = false;
+    const activeGrants = await db
+      .select()
+      .from(adminGrant)
+      .where(and(eq(adminGrant.userId, userId), eq(adminGrant.status, 'active')))
+      .limit(1)
+      .$withCache();
+
+    if (activeGrants.length > 0) {
+      const grant = activeGrants[0];
+      // Check if grant hasn't expired (if expiresAt is set)
+      if (!grant.expiresAt || new Date(grant.expiresAt) > new Date()) {
+        hasAdminGrant = true;
+      }
+    }
+
     // Determine overall Pro status and source
     let isProUser = false;
-    let proSource: 'polar' | 'dodo' | 'none' = 'none';
+    let proSource: 'polar' | 'dodo' | 'admin' | 'none' = 'none';
     let subscriptionStatus: 'active' | 'canceled' | 'expired' | 'none' = 'none';
 
     if (activePolarSubscription) {
@@ -358,6 +392,10 @@ export async function getComprehensiveUserData(): Promise<ComprehensiveUserData 
     } else if (isDodoActive) {
       isProUser = true;
       proSource = 'dodo';
+      subscriptionStatus = 'active';
+    } else if (hasAdminGrant) {
+      isProUser = true;
+      proSource = 'admin';
       subscriptionStatus = 'active';
     } else {
       // Check for expired/canceled Polar subscriptions
@@ -442,7 +480,7 @@ export async function getUserSubscriptionStatus(): Promise<'active' | 'canceled'
   return userData?.subscriptionStatus || 'none';
 }
 
-export async function getProSource(): Promise<'polar' | 'dodo' | 'none'> {
+export async function getProSource(): Promise<'polar' | 'dodo' | 'admin' | 'none'> {
   const userData = await getComprehensiveUserData();
   return userData?.proSource || 'none';
 }

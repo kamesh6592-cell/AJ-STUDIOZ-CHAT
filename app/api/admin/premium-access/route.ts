@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getComprehensiveUserData } from '@/lib/user-data-server';
-import { betterauthClient } from '@/lib/auth-client';
+import { db } from '@/lib/db';
+import { user, adminGrant } from '@/lib/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { generateId } from 'lucia';
 
 export async function POST(request: NextRequest) {
   try {
     const adminUser = await getComprehensiveUserData();
     
-    // Check if user is admin (you can modify this condition)
+    // Check if user is admin
     if (!adminUser || adminUser.email !== 'kamesh6592@gmail.com') {
       return NextResponse.json(
         { error: 'Admin access required' },
@@ -24,19 +27,60 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Here you would implement the logic to grant/revoke premium access
-    // For now, let's create a simple response
-    
+    // Find the target user
+    const targetUsers = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, userEmail))
+      .limit(1);
+
+    if (targetUsers.length === 0) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const targetUser = targetUsers[0];
+
+    if (action === 'grant') {
+      // Grant premium access
+      await db.insert(adminGrant).values({
+        id: generateId(15),
+        userId: targetUser.id,
+        grantedBy: adminUser.email,
+        reason: reason || 'Manual grant by admin',
+        status: 'active',
+        expiresAt: null, // Permanent until revoked
+      });
+    } else if (action === 'revoke') {
+      // Revoke all active grants for this user
+      await db
+        .update(adminGrant)
+        .set({
+          status: 'revoked',
+          revokedAt: new Date(),
+          revokedBy: adminUser.email,
+          revokeReason: reason || 'Manual revoke by admin',
+        })
+        .where(
+          and(
+            eq(adminGrant.userId, targetUser.id),
+            eq(adminGrant.status, 'active')
+          )
+        );
+    }
+
     const result = {
       success: true,
       action,
       userEmail,
+      userId: targetUser.id,
       reason: reason || `${action === 'grant' ? 'Granted' : 'Revoked'} by admin`,
       timestamp: new Date().toISOString(),
       adminEmail: adminUser.email,
     };
 
-    // Log the admin action
     console.log('Admin Premium Access Action:', result);
 
     return NextResponse.json(result);
