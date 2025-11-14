@@ -2046,13 +2046,14 @@ const CodeContextTool: React.FC<{ args: any; result: any }> = ({ args, result })
 
   if (!result) {
     return (
-      <div className="group my-2 p-3 rounded-md border border-neutral-200/60 dark:border-neutral-700/60 bg-neutral-50/30 dark:bg-neutral-900/30">
+      <div className="group my-3 p-4 rounded-xl border border-violet-200/60 dark:border-violet-700/40 bg-gradient-to-br from-violet-50/80 via-purple-50/60 to-indigo-50/80 dark:from-violet-950/40 dark:via-purple-950/30 dark:to-indigo-950/40 backdrop-blur-sm shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 rounded-md bg-neutral-600 flex items-center justify-center opacity-80">
-            <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md">
+            <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
           </div>
-          <div className="flex-1">
-            <div className="h-2.5 w-20 bg-neutral-300 dark:bg-neutral-600 rounded-sm animate-pulse" />
+          <div className="flex-1 space-y-2">
+            <div className="h-3 w-32 bg-violet-300/50 dark:bg-violet-600/50 rounded animate-pulse" />
+            <div className="h-2 w-48 bg-violet-200/50 dark:bg-violet-700/50 rounded animate-pulse" />
           </div>
         </div>
       </div>
@@ -2064,20 +2065,23 @@ const CodeContextTool: React.FC<{ args: any; result: any }> = ({ args, result })
   const previewText = shouldShowAccordion ? responseText.slice(0, 400) + '...' : responseText;
 
   return (
-    <div className="group my-2 rounded-md border border-neutral-200/60 dark:border-neutral-700/60 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm hover:border-neutral-300 dark:hover:border-neutral-600 transition-all duration-200">
-      <div className="p-3">
+    <div className="group my-3 rounded-xl border border-violet-200/60 dark:border-violet-700/40 bg-gradient-to-br from-white via-violet-50/30 to-purple-50/30 dark:from-neutral-900/80 dark:via-violet-950/30 dark:to-purple-950/30 backdrop-blur-sm hover:border-violet-300 dark:hover:border-violet-600 hover:shadow-lg hover:shadow-violet-500/10 dark:hover:shadow-violet-500/20 transition-all duration-300">
+      <div className="p-4">
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 w-5 h-5 rounded-md bg-blue-600 flex items-center justify-center">
-            <Code className="w-2.5 h-2.5 text-white" />
+          {/* Icon with gradient background */}
+          <div className="mt-0.5 w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600 flex items-center justify-center shadow-md group-hover:shadow-lg group-hover:shadow-violet-500/50 transition-all duration-300">
+            <Code className="w-4 h-4 text-white" />
           </div>
 
           <div className="flex-1 min-w-0 space-y-3">
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs">
-                <span className="font-medium text-neutral-900 dark:text-neutral-100">Code Context</span>
-                <span className="text-neutral-400">•</span>
-                <span className="text-neutral-500 dark:text-neutral-400 truncate max-w-[200px]">
+                <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 dark:from-violet-400 dark:via-purple-400 dark:to-indigo-400">
+                  Code Context
+                </span>
+                <span className="text-violet-400 dark:text-violet-500">•</span>
+                <span className="text-neutral-600 dark:text-neutral-400 truncate max-w-[200px] font-medium">
                   {args ? args.query : ''}
                 </span>
               </div>
@@ -2091,14 +2095,14 @@ const CodeContextTool: React.FC<{ args: any; result: any }> = ({ args, result })
                     navigator.clipboard.writeText(responseText);
                     toast.success('Code context copied to clipboard');
                   }}
-                  className="h-6 w-6 p-0 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  className="h-7 w-7 p-0 rounded-lg hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-all duration-200"
                 >
                   <HugeiconsIcon
                     icon={Copy01Icon}
-                    size={12}
+                    size={14}
                     color="currentColor"
                     strokeWidth={2}
-                    className="text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+                    className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300"
                   />
                 </Button>
 
@@ -2107,14 +2111,14 @@ const CodeContextTool: React.FC<{ args: any; result: any }> = ({ args, result })
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="secondary"
-                      className="rounded-md bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/20 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-0 text-xs px-2 py-0.5"
+                      className="rounded-lg bg-gradient-to-r from-violet-100 to-purple-100 hover:from-violet-200 hover:to-purple-200 dark:from-violet-900/30 dark:to-purple-900/30 dark:hover:from-violet-900/40 dark:hover:to-purple-900/40 text-violet-700 dark:text-violet-300 border-0 text-xs px-2.5 py-0.5 font-semibold shadow-sm"
                     >
                       {result.resultsCount} results
                     </Badge>
                     {result.outputTokens && (
                       <Badge
                         variant="secondary"
-                        className="rounded-md bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:hover:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border-0 text-xs px-2 py-0.5"
+                        className="rounded-lg bg-gradient-to-r from-emerald-100 to-teal-100 hover:from-emerald-200 hover:to-teal-200 dark:from-emerald-900/30 dark:to-teal-900/30 dark:hover:from-emerald-900/40 dark:hover:to-teal-900/40 text-emerald-700 dark:text-emerald-300 border-0 text-xs px-2.5 py-0.5 font-semibold shadow-sm"
                       >
                         {result.outputTokens} tokens
                       </Badge>
@@ -2135,14 +2139,14 @@ const CodeContextTool: React.FC<{ args: any; result: any }> = ({ args, result })
                 >
                   <AccordionItem value="context" className="border-0">
                     <div className="space-y-2">
-                      <div className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed break-words">
+                      <div className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed break-words font-mono bg-neutral-50/50 dark:bg-neutral-900/50 rounded-lg p-3 border border-violet-100/50 dark:border-violet-800/30">
                         {!isExpanded && previewText}
                       </div>
-                      <AccordionTrigger className="py-2 hover:no-underline text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">
-                        {isExpanded ? 'Show less' : 'Show full context'}
+                      <AccordionTrigger className="py-2 hover:no-underline text-xs font-semibold text-transparent bg-clip-text bg-gradient-to-r from-violet-600 to-purple-600 dark:from-violet-400 dark:to-purple-400 hover:from-violet-700 hover:to-purple-700 dark:hover:from-violet-300 dark:hover:to-purple-300 transition-all">
+                        {isExpanded ? '▲ Show less' : '▼ Show full context'}
                       </AccordionTrigger>
                       <AccordionContent className="pb-0">
-                        <div className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed break-words whitespace-pre-wrap pt-2 border-t border-neutral-200/60 dark:border-neutral-700/60">
+                        <div className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed break-words whitespace-pre-wrap pt-2 border-t border-violet-200/50 dark:border-violet-700/30 font-mono bg-neutral-50/50 dark:bg-neutral-900/50 rounded-lg p-3 mt-2">
                           {responseText}
                         </div>
                       </AccordionContent>
@@ -2150,17 +2154,19 @@ const CodeContextTool: React.FC<{ args: any; result: any }> = ({ args, result })
                   </AccordionItem>
                 </Accordion>
               ) : (
-                <div className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed break-words whitespace-pre-wrap">
+                <div className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed break-words whitespace-pre-wrap font-mono bg-neutral-50/50 dark:bg-neutral-900/50 rounded-lg p-3 border border-violet-100/50 dark:border-violet-800/30">
                   {responseText}
                 </div>
               )}
 
               {/* Footer metadata */}
               {result?.searchTime && (
-                <div className="flex items-center gap-2 pt-2 border-t border-neutral-200/30 dark:border-neutral-700/30">
-                  <Clock className="w-3 h-3 text-neutral-400" />
-                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
-                    Search completed in {(result.searchTime / 1000).toFixed(2)}s
+                <div className="flex items-center gap-2 pt-2 border-t border-violet-200/40 dark:border-violet-700/30">
+                  <div className="w-4 h-4 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                    <Clock className="w-2.5 h-2.5 text-white" />
+                  </div>
+                  <span className="text-xs font-medium text-violet-600 dark:text-violet-400">
+                    Completed in {(result.searchTime / 1000).toFixed(2)}s
                   </span>
                 </div>
               )}
