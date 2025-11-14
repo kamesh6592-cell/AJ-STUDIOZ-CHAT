@@ -88,6 +88,7 @@ export default function AdminPage() {
   // Grants state
   const [grants, setGrants] = useState<AdminGrant[]>([]);
   const [grantsLoading, setGrantsLoading] = useState(false);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
 
   // Check if user is admin
   useEffect(() => {
@@ -122,6 +123,35 @@ export default function AdminPage() {
       toast.error('Failed to fetch grants');
     } finally {
       setGrantsLoading(false);
+    }
+  };
+
+  // Cleanup duplicate grants
+  const handleCleanupGrants = async () => {
+    setCleanupLoading(true);
+    try {
+      toast.loading('Cleaning up duplicate grants...', { id: 'cleanup' });
+
+      const response = await fetch('/api/admin/cleanup-grants', {
+        method: 'POST',
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(
+          `Cleaned up ${data.grantsRevoked} duplicate grant(s)`,
+          { id: 'cleanup' }
+        );
+        // Refresh grants list
+        fetchGrants();
+        fetchUsers(pagination.page, searchQuery);
+      } else {
+        toast.error(data.error || 'Cleanup failed', { id: 'cleanup' });
+      }
+    } catch (error) {
+      toast.error('Failed to cleanup duplicates', { id: 'cleanup' });
+    } finally {
+      setCleanupLoading(false);
     }
   };
 
@@ -602,13 +632,31 @@ export default function AdminPage() {
             {/* Active Grants List */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Crown className="w-5 h-5" />
-                  Active Admin Grants
-                </CardTitle>
-                <CardDescription>
-                  List of all premium access grants managed by admin
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Crown className="w-5 h-5" />
+                      Active Admin Grants
+                    </CardTitle>
+                    <CardDescription>
+                      List of all premium access grants managed by admin
+                    </CardDescription>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleCleanupGrants}
+                    disabled={cleanupLoading || grantsLoading}
+                    className="text-orange-600 hover:text-orange-700"
+                  >
+                    {cleanupLoading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Shield className="w-4 h-4 mr-2" />
+                    )}
+                    Cleanup Duplicates
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {grantsLoading ? (
