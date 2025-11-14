@@ -62,10 +62,22 @@ Complete guide to set up DodoPayments for AJ STUDIOZ with test and production mo
 ### Local Development (.env.local)
 ```env
 # DodoPayments Test Configuration (Safe for development)
-DODO_PAYMENTS_API_KEY=dodo_test_your_test_api_key_here
 DODO_PAYMENTS_TEST_API_KEY=dodo_test_your_test_api_key_here
-DODO_PAYMENTS_WEBHOOK_SECRET=your_test_webhook_secret_here
+DODO_PAYMENTS_TEST_WEBHOOK_SECRET=whsec_your_test_webhook_secret_here
+
+# Test Product Configuration (₹2 test payment)
+NEXT_PUBLIC_TEST_PRODUCT_ID=pdt_your_test_product_id
+NEXT_PUBLIC_TEST_PREMIUM_SLUG=starter
+
+# Production Product Configuration (₹1299/month)
+NEXT_PUBLIC_PREMIUM_TIER=pdt_your_production_product_id
+NEXT_PUBLIC_PREMIUM_SLUG=pro-plan-dodo
 ```
+
+**How it works:**
+- In development (NODE_ENV !== 'production'), the system uses `DODO_PAYMENTS_TEST_API_KEY` and `NEXT_PUBLIC_TEST_PRODUCT_ID`
+- In production, it automatically switches to `DODO_PAYMENTS_API_KEY` and `NEXT_PUBLIC_PREMIUM_TIER`
+- This prevents accidental test transactions in production
 
 ### Production (Vercel Environment Variables)
 ```env
@@ -105,14 +117,21 @@ DODO_PAYMENTS_WEBHOOK_SECRET=your_live_webhook_secret_here
    Name: Test Payment
    Price: ₹2 (or $0.02 USD)
    Currency: INR
-   Type: One-time Payment
-   Slug: test-product
+   Type: One-time Payment OR Subscription (Monthly)
+   Slug: starter
    Description: For testing payment integration
    ```
-2. Add to `.env.local`:
+2. Copy the **Product ID** (starts with `pdt_`)
+3. Add to `.env.local`:
    ```env
-   NEXT_PUBLIC_TEST_PREMIUM_SLUG=test-product
+   NEXT_PUBLIC_TEST_PRODUCT_ID=pdt_your_test_product_id
+   NEXT_PUBLIC_TEST_PREMIUM_SLUG=starter
    ```
+
+**Current Test Configuration:**
+- Test Product ID: `pdt_pqytGOBI0Y1xM4TBlsIgS`
+- Test Product Slug: `starter`
+- Test Webhook Secret: `whsec_tJRFxfU4pjc/+GWFh2PCFXnd0eskDvGK`
 
 ### Add Product Slug to Environment
 ```env

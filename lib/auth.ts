@@ -49,9 +49,15 @@ const polarClient = process.env.POLAR_ACCESS_TOKEN ? new Polar({
   ...(process.env.NODE_ENV === 'production' ? {} : { server: 'sandbox' }),
 }) : null;
 
-export const dodoPayments = process.env.DODO_PAYMENTS_API_KEY ? new DodoPayments({
-  bearerToken: process.env.DODO_PAYMENTS_API_KEY!,
-  ...(process.env.NODE_ENV === 'production' ? { environment: 'live_mode' } : { environment: 'test_mode' }),
+// DodoPayments: Use test keys in development, production keys in production
+const isDevelopment = process.env.NODE_ENV !== 'production';
+const dodoApiKey = isDevelopment 
+  ? (process.env.DODO_PAYMENTS_TEST_API_KEY || process.env.DODO_PAYMENTS_API_KEY)
+  : process.env.DODO_PAYMENTS_API_KEY;
+
+export const dodoPayments = dodoApiKey ? new DodoPayments({
+  bearerToken: dodoApiKey,
+  environment: isDevelopment ? 'test_mode' : 'live_mode',
 }) : null;
 
 export const auth = betterAuth({
@@ -133,16 +139,20 @@ export const auth = betterAuth({
         dodocheckout({
           products: [
             {
-              productId:
-                process.env.NEXT_PUBLIC_PREMIUM_TIER ||
-                (() => {
-                  throw new Error('NEXT_PUBLIC_PREMIUM_TIER environment variable is required');
-                })(),
-              slug:
-                process.env.NEXT_PUBLIC_PREMIUM_SLUG ||
-                (() => {
-                  throw new Error('NEXT_PUBLIC_PREMIUM_SLUG environment variable is required');
-                })(),
+              productId: (
+                isDevelopment
+                  ? (process.env.NEXT_PUBLIC_TEST_PRODUCT_ID || process.env.NEXT_PUBLIC_PREMIUM_TIER)
+                  : process.env.NEXT_PUBLIC_PREMIUM_TIER
+              ) || (() => {
+                throw new Error('NEXT_PUBLIC_PREMIUM_TIER or NEXT_PUBLIC_TEST_PRODUCT_ID environment variable is required');
+              })(),
+              slug: (
+                isDevelopment
+                  ? (process.env.NEXT_PUBLIC_TEST_PREMIUM_SLUG || process.env.NEXT_PUBLIC_PREMIUM_SLUG)
+                  : process.env.NEXT_PUBLIC_PREMIUM_SLUG
+              ) || (() => {
+                throw new Error('NEXT_PUBLIC_PREMIUM_SLUG or NEXT_PUBLIC_TEST_PREMIUM_SLUG environment variable is required');
+              })(),
             },
           ],
           successUrl: '/success',
@@ -150,7 +160,9 @@ export const auth = betterAuth({
         }),
         dodoportal(),
         dodowebhooks({
-          webhookKey: process.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
+          webhookKey: isDevelopment
+            ? (process.env.DODO_PAYMENTS_TEST_WEBHOOK_SECRET || process.env.DODO_PAYMENTS_WEBHOOK_SECRET!)
+            : process.env.DODO_PAYMENTS_WEBHOOK_SECRET!,
           onPayload: async (payload) => {
             const webhookPayload = payload as any;
             console.log('🔔 Received Dodo Payments webhook:', webhookPayload.type);
