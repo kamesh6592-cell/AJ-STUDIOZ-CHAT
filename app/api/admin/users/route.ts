@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
     
     const offset = (page - 1) * limit;
 
-    // Build query with search
-    const query = db.select({
+    // Create base query
+    let query = db.select({
       id: user.id,
       name: user.name,
       email: user.email,
