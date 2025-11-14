@@ -42,6 +42,21 @@ interface UsersPagination {
   hasPrev: boolean;
 }
 
+interface AdminGrant {
+  id: string;
+  userId: string;
+  grantedBy: string;
+  grantedAt: string;
+  expiresAt: string | null;
+  reason: string;
+  status: string;
+  revokedAt: string | null;
+  revokedBy: string | null;
+  revokeReason: string | null;
+  userEmail: string;
+  userName: string;
+}
+
 export default function AdminPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
@@ -70,6 +85,10 @@ export default function AdminPage() {
   const [testEmailAddress, setTestEmailAddress] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
 
+  // Grants state
+  const [grants, setGrants] = useState<AdminGrant[]>([]);
+  const [grantsLoading, setGrantsLoading] = useState(false);
+
   // Check if user is admin
   useEffect(() => {
     if (!isPending && (!session || session.user.email !== 'kamesh6592@gmail.com')) {
@@ -82,7 +101,29 @@ export default function AdminPage() {
     if (activeTab === 'users' && session?.user.email === 'kamesh6592@gmail.com') {
       fetchUsers(1, '');
     }
+    if (activeTab === 'access' && session?.user.email === 'kamesh6592@gmail.com') {
+      fetchGrants();
+    }
   }, [activeTab, session]);
+
+  // Fetch grants function
+  const fetchGrants = async () => {
+    setGrantsLoading(true);
+    try {
+      const response = await fetch('/api/admin/check-grants');
+      const data = await response.json();
+
+      if (response.ok) {
+        setGrants(data.grants || []);
+      } else {
+        toast.error(data.error || 'Failed to fetch grants');
+      }
+    } catch (error) {
+      toast.error('Failed to fetch grants');
+    } finally {
+      setGrantsLoading(false);
+    }
+  };
 
   // Fetch users function
   const fetchUsers = async (page = 1, search = '') => {
@@ -185,8 +226,9 @@ export default function AdminPage() {
         toast.success(`Successfully ${action === 'grant' ? 'granted' : 'revoked'} premium access for ${targetEmail}`);
         setUserEmail('');
         setReason('');
-        // Refresh users list
+        // Refresh users list and grants
         fetchUsers(pagination.page, searchQuery);
+        fetchGrants();
       } else {
         toast.error(data.error || 'Action failed');
       }
@@ -554,6 +596,118 @@ export default function AdminPage() {
                     Admin: kamesh6592@gmail.com
                   </Badge>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Active Grants List */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Crown className="w-5 h-5" />
+                  Active Admin Grants
+                </CardTitle>
+                <CardDescription>
+                  List of all premium access grants managed by admin
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {grantsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                ) : grants.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No grants found
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="flex gap-2 mb-4">
+                      <Badge variant="default">
+                        Total: {grants.length}
+                      </Badge>
+                      <Badge variant="default" className="bg-green-600">
+                        Active: {grants.filter(g => g.status === 'active').length}
+                      </Badge>
+                      <Badge variant="destructive">
+                        Revoked: {grants.filter(g => g.status === 'revoked').length}
+                      </Badge>
+                    </div>
+
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>User</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Granted</TableHead>
+                            <TableHead>Reason</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {grants.map((grant) => (
+                            <TableRow key={grant.id}>
+                              <TableCell>
+                                <div>
+                                  <div className="font-medium">{grant.userName}</div>
+                                  <div className="text-sm text-muted-foreground">{grant.userEmail}</div>
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {grant.status === 'active' ? (
+                                  <Badge className="bg-green-600">
+                                    Active
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="destructive">
+                                    Revoked
+                                  </Badge>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm">
+                                  {new Date(grant.grantedAt).toLocaleDateString('en-IN', {
+                                    day: '2-digit',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  })}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  by {grant.grantedBy}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <div className="text-sm max-w-[200px] truncate">
+                                  {grant.reason || 'N/A'}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {grant.status === 'active' ? (
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handlePremiumAction('revoke', grant.userEmail)}
+                                    disabled={isLoading}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <UserMinus className="w-3 h-3 mr-1" />
+                                    Revoke
+                                  </Button>
+                                ) : grant.revokedAt ? (
+                                  <div className="text-xs text-muted-foreground">
+                                    Revoked {new Date(grant.revokedAt).toLocaleDateString('en-IN')}
+                                  </div>
+                                ) : null}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

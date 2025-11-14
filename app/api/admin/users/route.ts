@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getComprehensiveUserData } from '@/lib/user-data-server';
 import { db } from '@/lib/db';
-import { user } from '@/lib/db/schema';
-import { desc, sql } from 'drizzle-orm';
+import { user, subscription, payment, adminGrant } from '@/lib/db/schema';
+import { desc, sql, eq, and, gt } from 'drizzle-orm';
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,23 +59,98 @@ export async function GET(request: NextRequest) {
 
     // Get comprehensive data for each user (includes Pro status)
     const usersWithProStatus = await Promise.all(
-      allUsers.map(async (user) => {
+      allUsers.map(async (u) => {
         try {
-          // This would normally use a more efficient query, but for now we'll use a simplified approach
+          // Check admin grants
+          const activeGrants = await db
+            .select()
+            .from(adminGrant)
+            .where(and(eq(adminGrant.userId, u.id), eq(adminGrant.status, 'active')))
+            .limit(1);
+
+          let hasAdminGrant = false;
+          if (activeGrants.length > 0) {
+            const grant = activeGrants[0];
+            if (!grant.expiresAt || new Date(grant.expiresAt) > new Date()) {
+              hasAdminGrant = true;
+            }
+          }
+
+          // Check Polar subscriptions
+          const polarSubs = await db
+            .select()
+            .from(subscription)
+            .where(
+              and(
+                eq(subscription.userId, u.id),
+                eq(subscription.status, 'active')
+              )
+            )
+            .limit(1);
+
+          const hasPolarSub = polarSubs.length > 0;
+
+          // Check DodoPayments
+          const dodoPayments = await db
+            .select()
+            .from(payment)
+            .where(
+              and(
+                eq(payment.userId, u.id),
+                eq(payment.status, 'successful')
+              )
+            )
+            .orderBy(desc(payment.createdAt))
+            .limit(1);
+
+          let hasDodoPayment = false;
+          let dodoExpiresAt = null;
+          if (dodoPayments.length > 0) {
+            const mostRecent = dodoPayments[0];
+            const paymentDate = new Date(mostRecent.createdAt);
+            const expirationDate = new Date(paymentDate);
+            expirationDate.setDate(expirationDate.getDate() + 30);
+            
+            if (expirationDate > new Date()) {
+              hasDodoPayment = true;
+              dodoExpiresAt = expirationDate;
+            }
+          }
+
+          // Determine Pro status and source
+          let isProUser = false;
+          let proSource: string | null = null;
+          let proExpiresAt = null;
+
+          if (hasPolarSub) {
+            isProUser = true;
+            proSource = 'polar';
+          } else if (hasDodoPayment) {
+            isProUser = true;
+            proSource = 'dodo';
+            proExpiresAt = dodoExpiresAt;
+          } else if (hasAdminGrant) {
+            isProUser = true;
+            proSource = 'admin';
+          }
+
           return {
-            ...user,
-            isProUser: false, // Placeholder - you'd implement actual Pro status check here
-            proSource: null,
-            proExpiresAt: null,
-            lastSignIn: user.updatedAt,
+            ...u,
+            isProUser,
+            proSource,
+            proExpiresAt,
+            lastSignIn: u.updatedAt,
+            isPro: isProUser, // Add legacy field
           };
         } catch (error) {
+          console.error(`Error checking Pro status for user ${u.id}:`, error);
           return {
-            ...user,
+            ...u,
             isProUser: false,
             proSource: null,
             proExpiresAt: null,
-            lastSignIn: user.updatedAt,
+            lastSignIn: u.updatedAt,
+            isPro: false,
           };
         }
       })
