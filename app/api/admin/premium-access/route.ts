@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getComprehensiveUserData } from '@/lib/user-data-server';
+import { getComprehensiveUserData, clearUserDataCache } from '@/lib/user-data-server';
 import { db } from '@/lib/db';
 import { user, adminGrant } from '@/lib/db/schema';
 import { eq, and } from 'drizzle-orm';
@@ -71,6 +71,9 @@ export async function POST(request: NextRequest) {
         );
     }
 
+    // Clear user data cache to immediately reflect the change
+    clearUserDataCache(targetUser.id);
+
     const result = {
       success: true,
       action,
@@ -79,6 +82,7 @@ export async function POST(request: NextRequest) {
       reason: reason || `${action === 'grant' ? 'Granted' : 'Revoked'} by admin`,
       timestamp: new Date().toISOString(),
       adminEmail: adminUser.email,
+      cacheCleared: true,
     };
 
     console.log('Admin Premium Access Action:', result);
