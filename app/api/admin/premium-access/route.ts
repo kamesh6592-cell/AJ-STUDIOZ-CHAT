@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     if (action === 'grant') {
       // Grant premium access
       await db.insert(adminGrant).values({
-        id: generateId(15),
+        id: generateId(),
         userId: targetUser.id,
         grantedBy: adminUser.email,
         reason: reason || 'Manual grant by admin',
